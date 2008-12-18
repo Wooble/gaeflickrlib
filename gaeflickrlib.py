@@ -21,13 +21,14 @@ class GaeFlickrLib:
                 self.api_secret = None
         
     def execute(self, method, auth=None, **args):
-        """Run a Flickr method, return raw XML content. 
+        """Run a Flickr method, returns rsp element from REST response.
         defaults to using authenticated call if an api_secret was given
         when GaeFlickrLib was initialized; set auth=False to do unauth'ed call.
         Manually setting auth to true without api_secret set will raise a
         GaeFlickrLibException.
         args is a dict of arguments to the method.  See Flickr's documentation.
         """
+        import xml.dom.minidom
         if auth is None:
             if self.api_secret is None:
                 auth = False
@@ -49,7 +50,15 @@ class GaeFlickrLib:
         url = url.rstrip('&')
 
         resp = urlfetch.fetch(url)
-        return resp.content
+        dom = xml.dom.minidom.parseString(resp.content)
+        rsp = dom.getElementsByTagName('rsp')[0]
+        if rsp.getAttribute('stat') == 'ok':
+            return rsp
+        else:
+            err = rsp.getElementsByTagName('err')[0]
+            ecode = err.getAttribute('code')
+            emsg = err.getAttribute('msg')
+            raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
 
     def sign (self, args):
         """returns an API sig for the arguments in args.  
@@ -94,20 +103,20 @@ class GaeFlickrLib:
         return rc
 
 # activity
-    def activity_userComments:
+    def activity_userComments(self):
         raise NotImplementedError
 
-    def activity_userPhotos:
+    def activity_userPhotos(self):
         raise NotImplementedError
 
 # auth
-    def auth_checkToken:
+    def auth_checkToken(self):
         raise NotImplementedError
 
-    def auth_getFrob:
+    def auth_getFrob(self):
         raise NotImplementedError
 
-    def auth_getFullToken:
+    def auth_getFullToken(self):
         raise NotImplementedError
 
     def auth_getToken(self, frob = None):
@@ -115,351 +124,351 @@ class GaeFlickrLib:
         requires a frob (sent in callback from login URL); 
         not providing one will cause ugly crash at the moment.
         """
-        import xml.dom.minidom
-        resp = self.execute('flickr.auth.getToken', frob=frob)
-        dom = xml.dom.minidom.parseString(resp)
-        token = self._getText(dom.getElementsByTagName('token')[0].childNodes)
+#        import xml.dom.minidom
+        rsp = self.execute('flickr.auth.getToken', frob=frob)
+#        dom = xml.dom.minidom.parseString(resp)
+        token = self._getText(rsp.getElementsByTagName('token')[0].childNodes)
         return str(token)
 
 # blogs
-    def blogs_getList:
+    def blogs_getList(self):
         raise NotImplementedError
 
-    def blogs_postPhoto:
+    def blogs_postPhoto(self):
         raise NotImplementedError
 
 # contacts
-    def contacts_getList:
+    def contacts_getList(self):
         raise NotImplementedError
 
-    def contacts_getPublicList:
+    def contacts_getPublicList(self):
         raise NotImplementedError
 
 # favorites
-    def favorites_add:
+    def favorites_add(self):
         raise NotImplementedError
 
-    def favorites_getList:
+    def favorites_getList(self):
         raise NotImplementedError
 
-    def favorites_getPublicList:
+    def favorites_getPublicList(self):
         raise NotImplementedError
 
-    def favorites_remove:
+    def favorites_remove(self):
         raise NotImplementedError
 
 # groups
-    def groups_browse:
+    def groups_browse(self):
         raise NotImplementedError
 
-    def groups_getInfo:
+    def groups_getInfo(self):
         raise NotImplementedError
 
-    def groups_search:
+    def groups_search(self):
         raise NotImplementedError
 
 # groups.pools
-    def groups_pools_add:
+    def groups_pools_add(self):
         raise NotImplementedError
 
-    def groups_pools_getContext:
+    def groups_pools_getContext(self):
         raise NotImplementedError
 
-    def groups_pools_getGroups:
+    def groups_pools_getGroups(self):
         raise NotImplementedError
 
-    def groups_pools_getPhotos:
+    def groups_pools_getPhotos(self):
         raise NotImplementedError
 
-    def groups_pools_remove:
+    def groups_pools_remove(self):
         raise NotImplementedError
 
 # interestingness
-    def interestingness_getList:
+    def interestingness_getList(self):
         raise NotImplementedError
 
 # machinetags
-    def machinetags_getNamespaces:
+    def machinetags_getNamespaces(self):
         raise NotImplementedError
 
-    def machinetags_getPairs:
+    def machinetags_getPairs(self):
         raise NotImplementedError
 
-    def machinetags_getPredicates:
+    def machinetags_getPredicates(self):
         raise NotImplementedError
 
-    def machinetags_getValues:
+    def machinetags_getValues(self):
         raise NotImplementedError
 
 # people
-    def people_findByEmail:
+    def people_findByEmail(self):
         raise NotImplementedError
 
-    def people_findByUsername:
+    def people_findByUsername(self):
         raise NotImplementedError
 
-    def people_getInfo:
+    def people_getInfo(self):
         raise NotImplementedError
 
-    def people_getPublicGroups:
+    def people_getPublicGroups(self):
         raise NotImplementedError
 
-    def people_getPublicPhotos:
+    def people_getPublicPhotos(self):
         raise NotImplementedError
 
-    def people_getUploadStatus:
+    def people_getUploadStatus(self):
         raise NotImplementedError
 
 # photos
-    def photos_addTags:
+    def photos_addTags(self):
         raise NotImplementedError
 
-    def photos_delete:
+    def photos_delete(self):
         raise NotImplementedError
-    def photos_getAllContexts:
-        raise NotImplementedError
-
-    def photos_getContactsPhotos:
+    def photos_getAllContexts(self):
         raise NotImplementedError
 
-    def photos_getContactsPublicPhotos:
+    def photos_getContactsPhotos(self):
         raise NotImplementedError
 
-    def photos_getContext:
+    def photos_getContactsPublicPhotos(self):
         raise NotImplementedError
 
-    def photos_getCounts:
+    def photos_getContext(self):
         raise NotImplementedError
 
-    def photos_getExif:
+    def photos_getCounts(self):
         raise NotImplementedError
 
-    def photos_getFavorites:
+    def photos_getExif(self):
         raise NotImplementedError
 
-    def photos_getInfo:
+    def photos_getFavorites(self):
         raise NotImplementedError
 
-    def photos_getNotInSet:
+    def photos_getInfo(self):
         raise NotImplementedError
 
-    def photos_getPerms:
+    def photos_getNotInSet(self):
         raise NotImplementedError
 
-    def photos_getRecent:
+    def photos_getPerms(self):
         raise NotImplementedError
 
-    def photos_getSizes:
+    def photos_getRecent(self):
         raise NotImplementedError
 
-    def photos_getUntagged:
+    def photos_getSizes(self):
         raise NotImplementedError
 
-    def photos_getWithGeoData:
+    def photos_getUntagged(self):
         raise NotImplementedError
 
-    def photos_getWithoutGeoData:
+    def photos_getWithGeoData(self):
         raise NotImplementedError
 
-    def photos_recentlyUpdated:
+    def photos_getWithoutGeoData(self):
         raise NotImplementedError
 
-    def photos_removeTag:
+    def photos_recentlyUpdated(self):
         raise NotImplementedError
 
-    def photos_search:
+    def photos_removeTag(self):
         raise NotImplementedError
 
-    def photos_setContentType:
+    def photos_search(self):
         raise NotImplementedError
 
-    def photos_setDates:
+    def photos_setContentType(self):
         raise NotImplementedError
 
-    def photos_setMeta:
+    def photos_setDates(self):
         raise NotImplementedError
 
-    def photos_setPerms:
+    def photos_setMeta(self):
         raise NotImplementedError
 
-    def photos_setSafetyLevel:
+    def photos_setPerms(self):
         raise NotImplementedError
 
-    def photos_setTags:
+    def photos_setSafetyLevel(self):
         raise NotImplementedError
 
-# photos.comments:
-    def photos_comments_addComment:
+    def photos_setTags(self):
         raise NotImplementedError
 
-    def photos_comments_deleteComment:
+# photos.comments(self):
+    def photos_comments_addComment(self):
         raise NotImplementedError
 
-    def photos_comments_editComment:
+    def photos_comments_deleteComment(self):
         raise NotImplementedError
 
-    def photos_comments_getList:
+    def photos_comments_editComment(self):
         raise NotImplementedError
 
-# photos.geo:
-    def photos_geo_batchCorrectLocation:
+    def photos_comments_getList(self):
         raise NotImplementedError
-    def photos_geo_correctLocation:
+
+# photos.geo(self):
+    def photos_geo_batchCorrectLocation(self):
         raise NotImplementedError
-    def photos_geo_getLocation:
+    def photos_geo_correctLocation(self):
         raise NotImplementedError
-    def photos_geo_getPerms:
+    def photos_geo_getLocation(self):
         raise NotImplementedError
-    def photos_geo_photosForLocation:
+    def photos_geo_getPerms(self):
         raise NotImplementedError
-    def photos_geo_removeLocation:
+    def photos_geo_photosForLocation(self):
         raise NotImplementedError
-    def photos_geo_setContext:
+    def photos_geo_removeLocation(self):
         raise NotImplementedError
-    def photos_geo_setLocation:
+    def photos_geo_setContext(self):
         raise NotImplementedError
-    def photos_geo_setPerms:
+    def photos_geo_setLocation(self):
+        raise NotImplementedError
+    def photos_geo_setPerms(self):
         raise NotImplementedError
 
 # photos.licenses
-    def photos_licenses_getInfo:
+    def photos_licenses_getInfo(self):
         raise NotImplementedError
-    def photos_licenses_setLicense:
+    def photos_licenses_setLicense(self):
         raise NotImplementedError
 
 # photos.notes
-    def photos_notes_add:
+    def photos_notes_add(self):
         raise NotImplementedError
-    def photos_notes_delete:
+    def photos_notes_delete(self):
         raise NotImplementedError
-    def photos_notes_edit:
+    def photos_notes_edit(self):
         raise NotImplementedError
 
 # photos.transform
-    def photos_transform_rotate:
+    def photos_transform_rotate(self):
         raise NotImplementedError
 
 # photos.upload
-    def photos_upload_checkTickets:
+    def photos_upload_checkTickets(self):
         raise NotImplementedError
 
 # photosets
 
-    def photosets_addPhoto:
+    def photosets_addPhoto(self):
         raise NotImplementedError
-    def photosets_create:
+    def photosets_create(self):
         raise NotImplementedError
-    def photosets_delete:
+    def photosets_delete(self):
         raise NotImplementedError
-    def photosets_editMeta:
+    def photosets_editMeta(self):
         raise NotImplementedError
-    def photosets_editPhotos:
+    def photosets_editPhotos(self):
         raise NotImplementedError
-    def photosets_getContext:
+    def photosets_getContext(self):
         raise NotImplementedError
-    def photosets_getInfo:
+    def photosets_getInfo(self):
         raise NotImplementedError
-    def photosets_getList:
+    def photosets_getList(self):
         raise NotImplementedError
-    def photosets_getPhotos:
+    def photosets_getPhotos(self):
         raise NotImplementedError
-    def photosets_orderSets:
+    def photosets_orderSets(self):
         raise NotImplementedError
-    def photosets_removePhoto:
+    def photosets_removePhoto(self):
         raise NotImplementedError
 
 # photosets.comments
-    def photosets_comments_addComment:
+    def photosets_comments_addComment(self):
         raise NotImplementedError
-    def photosets_comments_deleteComment:
+    def photosets_comments_deleteComment(self):
         raise NotImplementedError
-    def photosets_comments_editComment:
+    def photosets_comments_editComment(self):
         raise NotImplementedError
-    def photosets_comments_getList:
+    def photosets_comments_getList(self):
         raise NotImplementedError
 
 # places
-    def places_find:
+    def places_find(self):
         raise NotImplementedError
-    def places_findByLatLon:
+    def places_findByLatLon(self):
         raise NotImplementedError
-    def places_getChildrenWithPhotosPublic:
+    def places_getChildrenWithPhotosPublic(self):
         raise NotImplementedError
-    def places_getInfo:
+    def places_getInfo(self):
         raise NotImplementedError
-    def places_getInfoByUrl:
+    def places_getInfoByUrl(self):
         raise NotImplementedError
-    def places_getPlaceTypes:
+    def places_getPlaceTypes(self):
         raise NotImplementedError
-    def places_placesForBoundingBox:
+    def places_placesForBoundingBox(self):
         raise NotImplementedError
-    def places_placesForContacts:
+    def places_placesForContacts(self):
         raise NotImplementedError
-    def places_placesForTags:
+    def places_placesForTags(self):
         raise NotImplementedError
-    def places_placesForUser:
+    def places_placesForUser(self):
         raise NotImplementedError
-    def places_resolvePlaceId:
+    def places_resolvePlaceId(self):
         raise NotImplementedError
-    def places_resolvePlaceURL:
+    def places_resolvePlaceURL(self):
         raise NotImplementedError
 
 # prefs
-    def prefs_getContentType:
+    def prefs_getContentType(self):
         raise NotImplementedError
-    def prefs_getGeoPerms:
+    def prefs_getGeoPerms(self):
         raise NotImplementedError
-    def prefs_getHidden:
+    def prefs_getHidden(self):
         raise NotImplementedError
-    def prefs_getPrivacy:
+    def prefs_getPrivacy(self):
         raise NotImplementedError
-    def prefs_getSafetyLevel:
+    def prefs_getSafetyLevel(self):
         raise NotImplementedError
 
 #reflection
 
-    def reflection_getMethodInfo:
+    def reflection_getMethodInfo(self):
         raise NotImplementedError
-    def reflection_getMethods:
+    def reflection_getMethods(self):
         raise NotImplementedError
 
 #tags
 
-    def tags_getClusterPhotos:
+    def tags_getClusterPhotos(self):
         raise NotImplementedError
-    def tags_getClusters:
+    def tags_getClusters(self):
         raise NotImplementedError
-    def tags_getHotList:
+    def tags_getHotList(self):
         raise NotImplementedError
-    def tags_getListPhoto:
+    def tags_getListPhoto(self):
         raise NotImplementedError
-    def tags_getListUser:
+    def tags_getListUser(self):
         raise NotImplementedError
-    def tags_getListUserPopular:
+    def tags_getListUserPopular(self):
         raise NotImplementedError
-    def tags_getListUserRaw:
+    def tags_getListUserRaw(self):
         raise NotImplementedError
-    def tags_getRelated:
+    def tags_getRelated(self):
         raise NotImplementedError
 
 #test
 
-    def test_echo:
+    def test_echo(self):
         raise NotImplementedError
-    def test_login:
+    def test_login(self):
         raise NotImplementedError
-    def test_null:
+    def test_null(self):
         raise NotImplementedError
 
 #urls
 
-    def urls_getGroup:
+    def urls_getGroup(self):
         raise NotImplementedError
-    def urls_getUserPhotos:
+    def urls_getUserPhotos(self):
         raise NotImplementedError
-    def urls_getUserProfile:
+    def urls_getUserProfile(self):
         raise NotImplementedError
-    def urls_lookupGroup:
+    def urls_lookupGroup(self):
         raise NotImplementedError
-    def urls_lookupUser:
+    def urls_lookupUser(self):
         raise NotImplementedError

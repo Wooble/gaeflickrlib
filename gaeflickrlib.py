@@ -1,13 +1,38 @@
 from google.appengine.api import urlfetch
 import exceptions
 import logging
+import urllib
 
 class GaeFlickrLibException(exceptions.Exception):
-    def __init__(self):
-        return
-    def __str__(self):
-        print "","GaeFlickrLib Error!"
+#     def __init__(self):
+#         return
+#     def __str__(self):
+#         print "","GaeFlickrLib Error!"
+    pass
 
+class GFLPhoto:
+    def __init__(self, photo):
+        self.data = {}
+        logging.debug(photo.toxml())
+        for n,v  in photo.attributes.items():
+            self.data[n] = v
+    def url(self, size = None):
+        purl = 'http://farm'
+        purl += self.data['farm'] + '.static.flickr.com/'
+        purl += self.data['server'] + '/'
+        purl += self.data['id'] + '_'
+        purl += self.data['secret'] 
+        if size is not None:
+            purl += '_' + size
+        purl += '.jpg'
+        return purl
+
+class GFLPhotoList:
+    def __init__(self, rsp):
+        self.photos = []
+        for ph in rsp.getElementsByTagName('photo'):
+            photo = GFLPhoto(ph)
+            self.photos.append(photo)
 
 class GaeFlickrLib:
     def __init__(self, api_key=None, **p):
@@ -20,7 +45,7 @@ class GaeFlickrLib:
             else:
                 self.api_secret = None
         
-    def execute(self, method, auth=None, **args):
+    def execute(self, method, auth=None, args={}):
         """Run a Flickr method, returns rsp element from REST response.
         defaults to using authenticated call if an api_secret was given
         when GaeFlickrLib was initialized; set auth=False to do unauth'ed call.
@@ -46,10 +71,12 @@ class GaeFlickrLib:
 
         url = 'http://api.flickr.com/services/rest/?'
         for k, v in args.items():
-            url += k + '=' + v + '&'
+            logging.debug("args-items %s %s\n"%(k,v))
+            url += urllib.quote(str(k)) + '=' + urllib.quote(str(v)) + '&'
         url = url.rstrip('&')
-
+        logging.debug(url)
         resp = urlfetch.fetch(url)
+        logging.debug(resp.content.decode("UTF-8"))
         dom = xml.dom.minidom.parseString(resp.content)
         rsp = dom.getElementsByTagName('rsp')[0]
         if rsp.getAttribute('stat') == 'ok':
@@ -97,7 +124,7 @@ class GaeFlickrLib:
         """
         rc = ""
         for node in nodelist:
-            logging.debug(node.nodeType)
+#            logging.debug(node.nodeType)
             if node.nodeType == node.TEXT_NODE:
                 rc = rc + node.data
         return rc
@@ -124,9 +151,7 @@ class GaeFlickrLib:
         requires a frob (sent in callback from login URL); 
         not providing one will cause ugly crash at the moment.
         """
-#        import xml.dom.minidom
-        rsp = self.execute('flickr.auth.getToken', frob=frob)
-#        dom = xml.dom.minidom.parseString(resp)
+        rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
         token = self._getText(rsp.getElementsByTagName('token')[0].childNodes)
         return str(token)
 
@@ -177,8 +202,13 @@ class GaeFlickrLib:
     def groups_pools_getGroups(self):
         raise NotImplementedError
 
-    def groups_pools_getPhotos(self):
-        raise NotImplementedError
+    def groups_pools_getPhotos(self, **args):
+        if not 'group_id' in args:
+            raise GaeFlickrLibException, "flickr.groups.pools.getPhotos requires group_id"
+        else:
+            rsp = self.execute('flickr.groups.pools.getPhotos', args=args)
+            pl = GFLPhotoList(rsp)
+            return pl
 
     def groups_pools_remove(self):
         raise NotImplementedError
@@ -213,8 +243,21 @@ class GaeFlickrLib:
     def people_getPublicGroups(self):
         raise NotImplementedError
 
-    def people_getPublicPhotos(self):
-        raise NotImplementedError
+    def people_getPublicPhotos(self, user_id = None, **args):
+        if user_id is None:
+            raise GaeFlickrLibException, "user_id not provided"
+        else:
+            args['user_id'] = user_id
+#            for k, v in args.items():
+#                logging.debug("%s %s\n"%(k,v))
+
+            rsp = self.execute('flickr.people.getPublicPhotos', args=args)
+#            logging.debug(rsp)
+            pl = GFLPhotoList(rsp)
+            return pl
+
+
+        
 
     def people_getUploadStatus(self):
         raise NotImplementedError
@@ -276,8 +319,14 @@ class GaeFlickrLib:
     def photos_removeTag(self):
         raise NotImplementedError
 
-    def photos_search(self):
-        raise NotImplementedError
+    def photos_search(self, **args):
+        if args is None:
+            raise GaeFlickrLibException, "search requires parameters"
+        else:
+            rsp = self.execute('flickr.photos.search', args=args)
+            pl = GFLPhotoList(rsp)
+            return pl
+
 
     def photos_setContentType(self):
         raise NotImplementedError

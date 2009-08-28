@@ -13,7 +13,7 @@ class GaeFlickrLibException(exceptions.Exception):
 class GFLPhoto:
     def __init__(self, photo):
         self.data = {}
-        logging.debug(photo.toxml())
+        logging.debug("GFLPhoto __init__: " + photo.toxml())
         for n,v  in photo.attributes.items():
             self.data[n] = v
     def url(self, size = None):
@@ -33,6 +33,9 @@ class GFLPhotoList:
         for ph in rsp.getElementsByTagName('photo'):
             photo = GFLPhoto(ph)
             self.photos.append(photo)
+        logging.debug("GFLPhotoList __init__ length: " + str(len(self.photos)))
+    def __iter__(self):
+        return self.photos.__iter__()
 
 class GaeFlickrLib:
     def __init__(self, api_key=None, **p):
@@ -86,6 +89,45 @@ class GaeFlickrLib:
             ecode = err.getAttribute('code')
             emsg = err.getAttribute('msg')
             raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
+
+
+    def execute_json(self, method, auth=None, args={}):
+#        import json
+        from django.utils import simplejson
+        import re
+        if auth is None:
+            if self.api_secret is None:
+                auth = False
+            else:
+                auth = True
+        args['api_key'] = self.api_key
+        args['method'] = method
+        args['format'] = 'json'
+        if auth:
+            if self.api_secret is None:
+                raise GaeFlickrLibException, "can't use auth without secret"
+            else:
+                args['api_sig'] = self.sign(args)
+
+        url = 'http://api.flickr.com/services/rest/?'
+        for k, v in args.items():
+            logging.debug("args-items %s %s\n"%(k,v))
+            url += urllib.quote(str(k)) + '=' + urllib.quote(str(v)) + '&'
+        url = url.rstrip('&')
+        logging.debug(url)
+        resp = urlfetch.fetch(url)
+        rejs = resp.content
+        logging.debug(rejs)
+        rejs2 = re.sub(r'^jsonFlickrApi\(', '', rejs)
+        rejs = re.sub(r'\)$', '', rejs2)
+        respdata = simplejson.loads(rejs)
+        if respdata['stat'] == 'ok':
+            return respdata['stat']
+        else:
+            ecode = respdata['err']['code']
+            emsg = respdata['err']['emsg']
+            raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
+
 
     def sign (self, args):
         """returns an API sig for the arguments in args.  
@@ -210,8 +252,15 @@ class GaeFlickrLib:
             pl = GFLPhotoList(rsp)
             return pl
 
-    def groups_pools_remove(self):
-        raise NotImplementedError
+    def groups_pools_remove(self, **args):
+        if not 'group_id' in args:
+            raise GaeFlickrLibException, "flickr.groups.pools.remove requires group_id"
+        elif not 'photo_id' in args:
+            raise GaeFlickrLibException, "flickr.groups.pools.remove requires photo_id"
+        else:
+            rsp = self.execute('flickr.groups.pools.remove', args=args)
+            return rsp
+
 
 # interestingness
     def interestingness_getList(self):
@@ -251,13 +300,16 @@ class GaeFlickrLib:
 #            for k, v in args.items():
 #                logging.debug("%s %s\n"%(k,v))
 
+#            rsp = self.execute_json('flickr.people.getPublicPhotos', args=args)
             rsp = self.execute('flickr.people.getPublicPhotos', args=args)
+            
 #            logging.debug(rsp)
             pl = GFLPhotoList(rsp)
-            return pl
-
-
-        
+            logging.debug(pl)
+            if pl:
+                return pl
+            else:
+                raise GaeFlickrLibException, "no photo list"
 
     def people_getUploadStatus(self):
         raise NotImplementedError
@@ -268,6 +320,7 @@ class GaeFlickrLib:
 
     def photos_delete(self):
         raise NotImplementedError
+
     def photos_getAllContexts(self):
         raise NotImplementedError
 
@@ -289,8 +342,12 @@ class GaeFlickrLib:
     def photos_getFavorites(self):
         raise NotImplementedError
 
-    def photos_getInfo(self):
+    def photos_getInfo(self, **args):
         raise NotImplementedError
+        if not 'photo_id' in args:
+            raise GaeFlickrLibException, "flickr.photos.getInfo requires photo_id"
+        else:
+            pass
 
     def photos_getNotInSet(self):
         raise NotImplementedError

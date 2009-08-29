@@ -27,6 +27,7 @@ class GFLPhoto:
         purl += '.jpg'
         return purl
 
+
 class GFLPhotoList:
     def __init__(self, rsp):
         self.photos = []
@@ -145,7 +146,7 @@ class GaeFlickrLib:
         m.update(authstring)
         return str(m.hexdigest())
 
-    def login_url(self, perms = 'read'):
+    def login_url(self, perms = 'write'):
         """returns a login URL for your application. set perms to 'read' (default),
         'write', or 'delete'.
         After logging in, user will be redirected by Flickr to the URL you set

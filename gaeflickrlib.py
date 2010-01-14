@@ -215,7 +215,7 @@ class GaeFlickrLib:
         fullname = user.getAttribute('fullname')
         
         td= {'token': token,
-             'perms', perms,
+             'perms': perms,
              'nsid': nsid,
              'username': username,
              'fullname': fullname}

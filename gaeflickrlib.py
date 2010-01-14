@@ -26,7 +26,8 @@ class GFLPhoto:
             purl += '_' + size
         purl += '.jpg'
         return purl
-
+    def url_s(self):
+        return self.url(size = 's')
 
 class GFLPhotoList:
     def __init__(self, rsp):
@@ -197,6 +198,28 @@ class GaeFlickrLib:
         rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
         token = self._getText(rsp.getElementsByTagName('token')[0].childNodes)
         return str(token)
+
+    class TokenObject:
+        pass
+        
+
+    def auth_getToken_full(self, frob = None):
+        """gets auth token, returns in a dict with other
+        data from getToken call"""
+        rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
+        token = str(self._getText(rsp.getElementsByTagName('token')[0].childNodes))
+        perms = str(self._getText(rsp.getElementsByTagName('perms')[0].childNodes))
+        user = self._getText(rsp.getElementsByTagName('user')[0])
+        nsid = user.getAttribute('nsid')
+        username = user.getAttribute('username')
+        fullname = user.getAttribute('fullname')
+        
+        td= {'token': token,
+             'perms', perms,
+             'nsid': nsid,
+             'username': username,
+             'fullname': fullname}
+        return td
 
 # blogs
     def blogs_getList(self):

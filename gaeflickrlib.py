@@ -238,12 +238,37 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
+    def blogs_getServices(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
     def blogs_postPhoto(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+# collections
+
+
+    def collections_getInfo(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def collections_getTree(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+# commons
+
+    def commons_getInstitutions(self):
         """Not yet implemented"""
         raise NotImplementedError
 
 # contacts
     def contacts_getList(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def contacts_getListRecentlyUploaded(self):
         """Not yet implemented"""
         raise NotImplementedError
 
@@ -267,6 +292,20 @@ class GaeFlickrLib:
     def favorites_remove(self):
         """Not yet implemented"""
         raise NotImplementedError
+
+# galleries
+    def galleries_addPhoto(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def galleries_getList(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def galleries_getListForPhoto(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
 
 # groups
     def groups_browse(self):
@@ -335,6 +374,10 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
+    def machinetags_getRecentValues(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
     def machinetags_getValues(self):
         """Not yet implemented"""
         raise NotImplementedError
@@ -349,6 +392,10 @@ class GaeFlickrLib:
         raise NotImplementedError
 
     def people_getInfo(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def people_getPhotosOf(self):
         """Not yet implemented"""
         raise NotImplementedError
 
@@ -508,31 +555,43 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
+    def photos_comments_getRecentForContacts(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
 # photos.geo(self):
     def photos_geo_batchCorrectLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_correctLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_getLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_getPerms(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_photosForLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_removeLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_setContext(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_setLocation(self):
         """Not yet implemented"""
         raise NotImplementedError
+
     def photos_geo_setPerms(self):
         """Not yet implemented"""
         raise NotImplementedError
@@ -555,6 +614,28 @@ class GaeFlickrLib:
     def photos_notes_edit(self):
         """Not yet implemented"""
         raise NotImplementedError
+
+# photos.people
+    def photos_people_add(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def photos_people_delete(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def photos_people_deleteCoords(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def photos_people_editCoords(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def photos_people_getList(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
 
 # photos.transform
     def photos_transform_rotate(self):
@@ -635,6 +716,12 @@ class GaeFlickrLib:
     def places_getPlaceTypes(self):
         """Not yet implemented"""
         raise NotImplementedError
+    def places_getShapeHistory(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+    def places_getTopPlacesList(self):
+        """Not yet implemented"""
+        raise NotImplementedError
     def places_placesForBoundingBox(self):
         """Not yet implemented"""
         raise NotImplementedError
@@ -651,6 +738,9 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
     def places_resolvePlaceURL(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+    def places_tagsForPlace(self):
         """Not yet implemented"""
         raise NotImplementedError
 

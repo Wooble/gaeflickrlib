@@ -1,0 +1,14 @@
+version 0.2, 2/19/2019:
+
+	- added GFLToken class, deprecated
+          GaeFlickrLib.auth_getToken_full; now instead of 2 methods
+          that can return either a token as a string or a token with
+          its metadata as a dict, we have an object that can be
+          treated as either.
+
+
+version 0.3, 2/20/2010:
+
+	- implemented flickr.photos.getContactsPhotos
+
+	- implemented flickr.photos.getContactsPublicPhotos

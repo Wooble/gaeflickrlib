@@ -1,5 +1,5 @@
 """Flickr API for Google App Engine"""
-__version__ = "0.2"
+__version__ = "0.3"
         
 
 from google.appengine.api import urlfetch
@@ -47,6 +47,7 @@ class GFLPhoto:
         #logging.debug("GFLPhoto __init__: " + photo.toxml())
         for key, value  in photo.attributes.items():
             self.data[key] = value
+
     def url(self, size = None):
         """Return URL for a photo; defaults to medium size"""
         purl = 'http://farm'
@@ -237,12 +238,14 @@ class GaeFlickrLib:
 
     def auth_getToken(self, frob = None):
         """implements flickr.auth.getToken API method.  
-        requires a frob (sent in callback from login URL); 
-        not providing one will cause ugly crash at the moment.
+        requires a frob (sent in callback from login URL)
         """
-        rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
-        token = GFLToken(rsp)
-        return token
+        if frob is not None:
+            rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
+            token = GFLToken(rsp)
+            return token
+        else:
+            raise GaeFlickrLibException, "auth_getToken requires a frob."
 
     def auth_getToken_full(self, frob = None):
         """for backwards compatibility; deprecated"""
@@ -298,9 +301,28 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
-    def favorites_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+    def favorites_getList(self, **args):
+        """user_id (Optional)
+    The NSID of the user to fetch the favorites list for. If this argument is omitted, the favorites list for the calling user is returned.
+min_fave_date (Optional)
+    Minimum date that a photo was favorited on. The date should be in the form of a unix timestamp.
+max_fave_date (Optional)
+    Maximum date that a photo was favorited on. The date should be in
+    the form of a unix timestamp.  
+extras (Optional)
+    A comma-delimited list of extra information to fetch for each
+returned record. Currently supported fields are: license, date_upload,
+date_taken, owner_name, icon_server, original_format, last_update,
+geo, tags, machine_tags, o_dims, views, media.  per_page (Optional)
+
+    Number of photos to return per page. If this argument is omitted, it defaults to 100. The maximum allowed value is 500.
+page (Optional)
+    The page of results to return. If this argument is omitted, it defaults 
+    to 1."""
+        rsp = self.execute('flickr.favorites.getList', args=args)
+        plist = GFLPhotoList(rsp)
+        return plist
+
 
     def favorites_getPublicList(self):
         """Not yet implemented"""
@@ -457,13 +479,46 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
-    def photos_getContactsPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+    def photos_getContactsPhotos(self, **args):
+        """Arguments
+count (Optional)
+    Number of photos to return. Defaults to 10, maximum 50. This is only used if single_photo is not passed.
+just_friends (Optional)
+    set as 1 to only show photos from friends and family (excluding regular contacts).
+single_photo (Optional)
+    Only fetch one photo (the latest) per contact, instead of all photos in chronological order.
+include_self (Optional)
+    Set to 1 to include photos from the calling user.
+extras (Optional)
+    A comma-delimited list of extra information to fetch for each returned record. Currently supported fields are: license, date_upload, date_taken, owner_name, icon_server, original_format, last_update. """
+        rsp = self.execute('flickr.photos.getContactsPhotos', args=args)
+        plist = GFLPhotoList(rsp)
+        return plist
 
-    def photos_getContactsPublicPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+def photos_getContactsPublicPhotos(self, **args):
+    """Arguments
+        
+api_key (Required)
+    Your API application key. See here for more details.
+user_id (Required)
+    The NSID of the user to fetch photos for.
+count (Optional)
+    Number of photos to return. Defaults to 10, maximum 50. This is only used if single_photo is not passed.
+just_friends (Optional)
+    set as 1 to only show photos from friends and family (excluding regular contacts).
+single_photo (Optional)
+    Only fetch one photo (the latest) per contact, instead of all photos in chronological order.
+    include_self (Optional)
+    Set to 1 to include photos from the user specified by user_id.
+extras (Optional)
+    A comma-delimited list of extra information to fetch for each returned record. Currently supported fields are: license, date_upload, date_taken, owner_name, icon_server, original_format, last_update. """
+    if not 'user_id' in args:
+        raise GaeFlickrLibException, "flickr.photos.getContactsPublicPhotos \
+        requires user_id"
+    else:
+        rsp = self.execute('flickr.photos.getContactsPublicPhotos', args=args)
+        plist = GFLPhotoList(rsp)
+        return plist
 
     def photos_getContext(self):
         """Not yet implemented"""

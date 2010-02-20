@@ -1,6 +1,10 @@
 """Flickr API for Google App Engine"""
+__version__ = "$Revision: 12 $"
+# $Source$
+
+        
+
 from google.appengine.api import urlfetch
-import exceptions
 import logging
 import urllib
 
@@ -14,8 +18,25 @@ def get_text(nodelist):
             retval = retval + node.data
     return retval
 
+class GFLToken:
+    """A Flickr auth token"""
+    def __init__(self, rsp):
+        self.data = {}
+        data = self.data
+        data['token'] = str(get_text(rsp.getElementsByTagName('token')[0]
+                                     .childNodes))
+        data['perms'] = str(get_text(rsp.getElementsByTagName('perms')[0]
+                                     .childNodes))
+        user = rsp.getElementsByTagName('user')[0]
+        data['nsid'] = user.getAttribute('nsid')
+        data['username'] = user.getAttribute('username')
+        data['fullname'] = user.getAttribute('fullname')
 
-class GaeFlickrLibException(exceptions.Exception):
+    def __dict__(self): return data
+    def __str__(self): return data['token']    
+    def __getitem__(self, key): return self.data[key]
+
+class GaeFlickrLibException(Exception):
     """Exception class"""
     pass
 
@@ -40,17 +61,23 @@ class GFLPhoto:
     def url_s(self):
         """Convenience method to return URL for small size photo"""
         return self.url(size = 's')
-
+    def __getitem__(self, key): return self.data[key]
+    
 class GFLPhotoList:
     """A list of Flickr photos, as returned by many API methods"""
     def __init__(self, rsp):
         self.photos = []
+        self.metadata = {}
+        for attrib, val in rsp.getElementsByTagName('photos')[0].attributes.items():
+            self[attrib] = val 
         for photoxml in rsp.getElementsByTagName('photo'):
             photo = GFLPhoto(photoxml)
             self.photos.append(photo)
         logging.debug("GFLPhotoList __init__ length: " + str(len(self.photos)))
     def __iter__(self):
         return self.photos.__iter__()
+    def __getitem__(self, key): return self.metadata[key]
+    def __setitem__(self, key, data): self.metadata[key] = data
 
 class GaeFlickrLib:
     """Connection to Flickr API"""
@@ -210,28 +237,13 @@ class GaeFlickrLib:
         not providing one will cause ugly crash at the moment.
         """
         rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
-        token = get_text(rsp.getElementsByTagName('token')[0].childNodes)
-        return str(token)
+        token = GFLToken(rsp)
+        return token
 
     def auth_getToken_full(self, frob = None):
-        """gets auth token, returns in a dict with other
-        data from getToken call"""
-        rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
-        token = str(get_text(rsp.getElementsByTagName('token')[0]
-                                  .childNodes))
-        perms = str(get_text(rsp.getElementsByTagName('perms')[0]
-                                  .childNodes))
-        user = rsp.getElementsByTagName('user')[0]
-        nsid = user.getAttribute('nsid')
-        username = user.getAttribute('username')
-        fullname = user.getAttribute('fullname')
-        
-        tokendata = {'token': token,
-                     'perms': perms,
-                     'nsid': nsid,
-                     'username': username,
-                     'fullname': fullname}
-        return tokendata
+        """for backwards compatibility; deprecated"""
+        logging.warning("auth_getToken_full is deprecated; use auth_getToken instead")
+        return self.auth_getToken(frob)
 
 # blogs
     def blogs_getList(self):

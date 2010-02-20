@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name='gaeflickrlib',
-      version='0.1',
+      version='0.2',
       py_modules=['gaeflickrlib'],
       author='Geoffrey Spear',
       author_email='geoffspear@gmail.com',

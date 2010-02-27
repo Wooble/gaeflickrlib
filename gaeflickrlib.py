@@ -3,8 +3,21 @@ __version__ = "0.3"
         
 
 from google.appengine.api import urlfetch
+from google.appengine.ext import webapp
+from google.appengine.ext import db
+from google.appengine.api import memcache
+
 import logging
 import urllib
+import pickle
+try:
+    import gaeflconfig
+    API_KEY = gaeflconfig.API_KEY
+    API_SECRET = gaeflconfig.API_SECRET
+    GAE_PERMS = gaeflconfig.GAE_PERMS
+except ImportError:
+    logging.warn("no gaeflconfig found")
+    
 
 def get_text(nodelist):
     """Helper function to pull text out of XML nodes
@@ -15,6 +28,15 @@ def get_text(nodelist):
         if node.nodeType == node.TEXT_NODE:
             retval = retval + node.data
     return retval
+
+def _perm_ok(perms, req_perms):
+    if perms == 'delete' or perms == req_perms:
+        return True
+    elif perms == 'write' and req_perms == 'read':
+        return True
+    else:
+        return False
+    
 
 class GFLToken:
     """A Flickr auth token"""
@@ -95,6 +117,10 @@ class GaeFlickrLib:
                 self.api_secret = p['api_secret']
             else:
                 self.api_secret = None
+            if 'token' in p:
+                self.token = p['token']
+            else:
+                self.token = None
         
     def execute(self, method, auth=None, args=None):
         """Run a Flickr method, returns rsp element from REST response.
@@ -111,6 +137,9 @@ class GaeFlickrLib:
                 auth = False
             else:
                 auth = True
+        if not 'auth_token' in args and auth and self.token is not None:
+            args['auth_token'] = self.token
+
 
         args['api_key'] = self.api_key
         args['method'] = method
@@ -481,44 +510,56 @@ page (Optional)
 
     def photos_getContactsPhotos(self, **args):
         """Arguments
-count (Optional)
-    Number of photos to return. Defaults to 10, maximum 50. This is only used if single_photo is not passed.
-just_friends (Optional)
-    set as 1 to only show photos from friends and family (excluding regular contacts).
-single_photo (Optional)
-    Only fetch one photo (the latest) per contact, instead of all photos in chronological order.
-include_self (Optional)
-    Set to 1 to include photos from the calling user.
-extras (Optional)
-    A comma-delimited list of extra information to fetch for each returned record. Currently supported fields are: license, date_upload, date_taken, owner_name, icon_server, original_format, last_update. """
+
+count (Optional) Number of photos to return. Defaults to 10, maximum
+    50. This is only used if single_photo is not passed.
+
+just_friends (Optional) set as 1 to only show photos from friends and
+    family (excluding regular contacts).
+
+single_photo (Optional) Only fetch one photo (the latest) per contact,
+    instead of all photos in chronological order.
+
+include_self (Optional) Set to 1 to include photos from the calling
+    user.
+
+extras (Optional) A comma-delimited list of extra information to fetch
+    for each returned record. Currently supported fields are: license,
+    date_upload, date_taken, owner_name, icon_server, original_format,
+    last_update."""
         rsp = self.execute('flickr.photos.getContactsPhotos', args=args)
         plist = GFLPhotoList(rsp)
         return plist
 
-def photos_getContactsPublicPhotos(self, **args):
-    """Arguments
+    def photos_getContactsPublicPhotos(self, **args):
+        """Arguments 
         
-api_key (Required)
-    Your API application key. See here for more details.
-user_id (Required)
-    The NSID of the user to fetch photos for.
-count (Optional)
-    Number of photos to return. Defaults to 10, maximum 50. This is only used if single_photo is not passed.
-just_friends (Optional)
-    set as 1 to only show photos from friends and family (excluding regular contacts).
-single_photo (Optional)
-    Only fetch one photo (the latest) per contact, instead of all photos in chronological order.
+    user_id (Required) The NSID of the user to fetch photos for.
+        
+    count (Optional) Number of photos to return. Defaults to 10,
+        maximum 50. This is only used if single_photo is not passed.
+        
+    just_friends (Optional) set as 1 to only show photos from friends
+        and family (excluding regular contacts).
+        
+    single_photo (Optional) Only fetch one photo (the latest) per
+        contact, instead of all photos in chronological order.
+        
     include_self (Optional)
-    Set to 1 to include photos from the user specified by user_id.
-extras (Optional)
-    A comma-delimited list of extra information to fetch for each returned record. Currently supported fields are: license, date_upload, date_taken, owner_name, icon_server, original_format, last_update. """
-    if not 'user_id' in args:
-        raise GaeFlickrLibException, "flickr.photos.getContactsPublicPhotos \
-        requires user_id"
-    else:
-        rsp = self.execute('flickr.photos.getContactsPublicPhotos', args=args)
-        plist = GFLPhotoList(rsp)
-        return plist
+        Set to 1 to include photos from the user specified by user_id.
+        
+    extras (Optional) A comma-delimited list of extra information to
+        fetch for each returned record. Currently supported fields
+        are: license, date_upload, date_taken, owner_name,
+        icon_server, original_format, last_update."""
+        if not 'user_id' in args:
+            raise GaeFlickrLibException, "flickr.photos.getContactsPublic\
+            Photos requires user_id"
+        else:
+            rsp = self.execute('flickr.photos.getContactsPublicPhotos',
+                               args=args)
+            plist = GFLPhotoList(rsp)
+            return plist
 
     def photos_getContext(self):
         """Not yet implemented"""
@@ -898,3 +939,91 @@ extras (Optional)
     def urls_lookupUser(self):
         """Not yet implemented"""
         raise NotImplementedError
+
+class FlickrAuthSession(db.Model):
+    """model to store a user's auth token; key_name is
+    to be set to the cookie value.
+    """
+    tokenobj = db.TextProperty()
+    session_date = db.DateTimeProperty(auto_now_add = True)
+
+
+def _authed(fun, self, perms, optional, *args, **kw):
+    logging.debug("in FlickrAuthed decorator: perms %s fun %s self %s",
+                  perms, fun, self)
+    logging.debug(repr(self.request.cookies))
+    if 'gaeflsid' in self.request.cookies:
+        authsess = memcache.get(self.request.cookies['gaeflsid'])
+        if authsess is None:
+            authsessobj = FlickrAuthSession.get_by_key_name(self.request.cookies['gaeflsid'])
+            if authsessobj is not None:
+                authsess = pickle.loads(str(authsessobj.tokenobj))
+        if authsess is not None and _perm_ok(authsess['perms'], perms):
+            self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET,
+                                             token = str(authsess))
+            return fun(self, *args, **kw)
+    if not optional:
+        logging.debug("no auth session; redirecting")
+        self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)
+        self.response.headers["Set-Cookie"] = "gaeflretpage=%s" % self.request.url
+        return self.redirect(self.flickr.login_url(perms = perms))
+    else:
+        self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)
+        return fun(self, *args, **kw)
+    
+
+def FlickrAuthed(arg=None, optional=False):
+    """Decorator for webapp.RequestHandler get(), put(), etc. methods
+    making method call require Flickr auth session.  To use, do:
+
+    @FlickrAuthed
+    get(self):
+
+    (will require 'read' or better permissions)
+
+    or
+
+    @FlickrAuthed('write') #or 'delete' or 'read'
+    get(self):
+
+    (to use specified permissions, or better)
+
+    You can also specify optional=True to get the existing auth session but
+    continue if there isn't one.
+
+    Your handler method will then have access to the variable "self.flickr" which is
+    a GaeFlickrLib object.
+    
+    """
+    if hasattr(arg, '__call__'): #decorator, no argument
+        def wrap(self, *args, **kw):
+            return _authed(arg, self, 'read', optional, *args, **kw)
+        return wrap
+    else:
+        def decorate(arg2):
+            def wrap(self, *args, **kw):
+                return _authed(arg2, self, arg, optional, *args, **kw)
+            return wrap
+        return decorate
+                              
+
+class FlickrAuthCallbackHandler(webapp.RequestHandler):
+    def get(self):
+        from uuid import uuid1
+
+        flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)
+        frob = self.request.get('frob')
+        tokenobj = flickr.auth_getToken(frob = frob)
+        sessid = str(uuid1())
+        self.response.headers["Set-Cookie"] = "gaeflsid=%s" % sessid
+        memcache.set(sessid, tokenobj, namespace='gaeflsid')
+        pto = pickle.dumps(tokenobj)
+        fas = FlickrAuthSession(tokenobj = pto, key_name = sessid)
+        fas.put()
+
+        if 'gaeflretpage' in self.request.cookies:
+#             self.response.headers["Set-Cookie"] = "gaeflretpage=nil; expires=\
+#             Fri, 31-Dec-2009 23:59:59 GMT"
+            self.redirect(self.request.cookies['gaeflretpage'])
+        else:
+            self.redirect('/')

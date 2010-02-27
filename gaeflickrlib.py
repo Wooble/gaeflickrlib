@@ -10,6 +10,7 @@ from google.appengine.api import memcache
 import logging
 import urllib
 import pickle
+
 try:
     import gaeflconfig
     API_KEY = gaeflconfig.API_KEY
@@ -20,8 +21,7 @@ except ImportError:
     
 
 def get_text(nodelist):
-    """Helper function to pull text out of XML nodes
-    """
+    """Helper function to pull text out of XML nodes."""
     retval = ""
     for node in nodelist:
         #            logging.debug(node.nodeType)
@@ -29,7 +29,9 @@ def get_text(nodelist):
             retval = retval + node.data
     return retval
 
+
 def _perm_ok(perms, req_perms):
+    """check if granted perms are >= requested perms"""
     if perms == 'delete' or perms == req_perms:
         return True
     elif perms == 'write' and req_perms == 'read':
@@ -40,6 +42,7 @@ def _perm_ok(perms, req_perms):
 
 class GFLToken:
     """A Flickr auth token"""
+
     def __init__(self, rsp):
         self.data = {}
         self.data['token'] = str(get_text(rsp.getElementsByTagName('token')[0]
@@ -53,17 +56,22 @@ class GFLToken:
 
     def __dict__(self):
         return self.data
+
     def __str__(self):
         return self.data['token']    
+
     def __getitem__(self, key):
         return self.data[key]
 
+
 class GaeFlickrLibException(Exception):
-    """Exception class"""
+    """Exception class for Flickr exceptions."""
     pass
 
+
 class GFLPhoto:
-    """Information about a single Flickr photo"""
+    """Information about a single Flickr photo."""
+
     def __init__(self, photo):
         self.data = {}
         #logging.debug("GFLPhoto __init__: " + photo.toxml())
@@ -81,12 +89,15 @@ class GFLPhoto:
             purl += '_' + size
         purl += '.jpg'
         return purl
+
     def url_s(self):
         """Convenience method to return URL for small size photo"""
         return self.url(size = 's')
+
     def __getitem__(self, key):
         return self.data[key]
     
+
 class GFLPhotoList:
     """A list of Flickr photos, as returned by many API methods"""
     def __init__(self, rsp):
@@ -99,12 +110,16 @@ class GFLPhotoList:
             photo = GFLPhoto(photoxml)
             self.photos.append(photo)
         logging.debug("GFLPhotoList __init__ length: " + str(len(self.photos)))
+
     def __iter__(self):
         return self.photos.__iter__()
+
     def __getitem__(self, key):
         return self.metadata[key]
+
     def __setitem__(self, key, data):
         self.metadata[key] = data
+
 
 class GaeFlickrLib:
     """Connection to Flickr API"""
@@ -172,7 +187,6 @@ class GaeFlickrLib:
     def execute_json(self, method, auth=None, args=None):
         """Execute a Flickr method, using json response format"""
 
-#        import json
         from django.utils import simplejson
         import re
         args = args or {}
@@ -208,7 +222,6 @@ class GaeFlickrLib:
             ecode = respdata['err']['code']
             emsg = respdata['err']['emsg']
             raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
-
 
     def sign (self, args):
         """returns an API sig for the arguments in args.  
@@ -949,13 +962,15 @@ class FlickrAuthSession(db.Model):
 
 
 def _authed(fun, self, perms, optional, *args, **kw):
+    """FlickrAuthed helper decorator"""
     logging.debug("in FlickrAuthed decorator: perms %s fun %s self %s",
                   perms, fun, self)
     logging.debug(repr(self.request.cookies))
     if 'gaeflsid' in self.request.cookies:
         authsess = memcache.get(self.request.cookies['gaeflsid'])
         if authsess is None:
-            authsessobj = FlickrAuthSession.get_by_key_name(self.request.cookies['gaeflsid'])
+            authsessobj = FlickrAuthSession.get_by_key_name(
+                self.request.cookies['gaeflsid'])
             if authsessobj is not None:
                 authsess = pickle.loads(str(authsessobj.tokenobj))
         if authsess is not None and _perm_ok(authsess['perms'], perms):
@@ -964,7 +979,8 @@ def _authed(fun, self, perms, optional, *args, **kw):
             return fun(self, *args, **kw)
     if not optional:
         logging.debug("no auth session; redirecting")
-        self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)
+        self.flickr = GaeFlickrLib(api_key=API_KEY, 
+                                   api_secret=API_SECRET)
         self.response.headers["Set-Cookie"] = "gaeflretpage=%s" % self.request.url
         return self.redirect(self.flickr.login_url(perms = perms))
     else:
@@ -996,15 +1012,15 @@ def FlickrAuthed(arg=None, optional=False):
     
     """
     if hasattr(arg, '__call__'): #decorator, no argument
-        def wrap(self, *args, **kw):
+        def _wrap(self, *args, **kw):
             return _authed(arg, self, 'read', optional, *args, **kw)
-        return wrap
+        return _wrap
     else:
-        def decorate(arg2):
-            def wrap(self, *args, **kw):
+        def _decorate(arg2):
+            def _wrap(self, *args, **kw):
                 return _authed(arg2, self, arg, optional, *args, **kw)
-            return wrap
-        return decorate
+            return _wrap
+        return _decorate
                               
 
 class FlickrAuthCallbackHandler(webapp.RequestHandler):

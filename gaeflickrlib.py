@@ -896,6 +896,64 @@ extras (Optional) A comma-delimited list of extra information to fetch
         """Not yet implemented"""
         raise NotImplementedError
 
+#stats
+    def flickr.stats_getCollectionDomains(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getCollectionReferrers(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getCollectionStats(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotoDomains(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotoReferrers(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotosetDomains(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotosetReferrers(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotosetStats(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotoStats(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotostreamDomains(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotostreamReferrers(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPhotostreamStats(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getPopularPhotos(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+    def flickr.stats_getTotalViews(self):
+        """Not yet implemented"""
+        raise NotImplementedError
+
+
 #tags
 
     def tags_getClusterPhotos(self):

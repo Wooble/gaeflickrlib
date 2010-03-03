@@ -12,3 +12,11 @@ version 0.3, 2/20/2010:
 	- implemented flickr.photos.getContactsPhotos
 
 	- implemented flickr.photos.getContactsPublicPhotos
+
+        - decorator for webapp.RequestHandlers to allow them to
+          require a Flickr auth (and automatically creating a
+          GaeFlickrLib object when an auth session exists)
+
+        - drop-in callback handler that converts frob to token and
+          starts a session for above-mentioned decorated request
+          handlers.

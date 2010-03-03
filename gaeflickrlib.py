@@ -897,59 +897,59 @@ extras (Optional) A comma-delimited list of extra information to fetch
         raise NotImplementedError
 
 #stats
-    def flickr.stats_getCollectionDomains(self):
+    def stats_getCollectionDomains(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getCollectionReferrers(self):
+    def stats_getCollectionReferrers(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getCollectionStats(self):
+    def stats_getCollectionStats(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotoDomains(self):
+    def stats_getPhotoDomains(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotoReferrers(self):
+    def stats_getPhotoReferrers(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotosetDomains(self):
+    def stats_getPhotosetDomains(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotosetReferrers(self):
+    def stats_getPhotosetReferrers(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotosetStats(self):
+    def stats_getPhotosetStats(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotoStats(self):
+    def stats_getPhotoStats(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotostreamDomains(self):
+    def stats_getPhotostreamDomains(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotostreamReferrers(self):
+    def stats_getPhotostreamReferrers(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPhotostreamStats(self):
+    def stats_getPhotostreamStats(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getPopularPhotos(self):
+    def stats_getPopularPhotos(self):
         """Not yet implemented"""
         raise NotImplementedError
 
-    def flickr.stats_getTotalViews(self):
+    def stats_getTotalViews(self):
         """Not yet implemented"""
         raise NotImplementedError
 

@@ -33,7 +33,7 @@ def get_text(nodelist):
 
 def _perm_ok(perms, req_perms):
     """check if granted perms are >= requested perms"""
-    if perms in ['delete', req_perms]
+    if perms in ['delete', req_perms]:
         return True
     elif perms == 'write' and req_perms == 'read':
         return True

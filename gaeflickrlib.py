@@ -22,17 +22,18 @@ except ImportError:
 
 def get_text(nodelist):
     """Helper function to pull text out of XML nodes."""
-    retval = ""
-    for node in nodelist:
-        #            logging.debug(node.nodeType)
-        if node.nodeType == node.TEXT_NODE:
-            retval = retval + node.data
+#     retval = ""
+#     for node in nodelist:
+#         #            logging.debug(node.nodeType)
+#         if node.nodeType == node.TEXT_NODE:
+#            retval = retval + node.data
+    retval = ''.join([node.data for node in nodelist if node.nodeType == node.TEXT_NODE]) 
     return retval
 
 
 def _perm_ok(perms, req_perms):
     """check if granted perms are >= requested perms"""
-    if perms == 'delete' or perms == req_perms:
+    if perms in ['delete', req_perms]
         return True
     elif perms == 'write' and req_perms == 'read':
         return True
@@ -226,8 +227,8 @@ class GaeFlickrLib:
     def sign (self, args):
         """returns an API sig for the arguments in args.  
         Note: if calling this manually, you must include your API key and 
-        method in the args to get a valid signature.  This function is called
-        automatically when needed by execute and other functions.
+        method in the args to get a valid signature.  This method is called
+        automatically when needed by execute and other methodss.
         """
         import hashlib
         authstring = self.api_secret
@@ -274,9 +275,20 @@ class GaeFlickrLib:
         """Not yet implemented"""
         raise NotImplementedError
 
-    def auth_getFullToken(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+    def auth_getFullToken(self, mini_token = None):
+        """convert a mini-token to a full auth token,
+
+        returns a GFLToken object.
+        """
+        if mini_token is not None:
+            rsp = self.execute('flickr.auth.getFullToken',
+                               args = {'mini_token':mini_token})
+            token = GFLToken(rsp)
+            return token
+        else:
+            raise GaeFlickrLibException, "auth_getFullToken \
+            requires a frob."
+        
 
     def auth_getToken(self, frob = None):
         """implements flickr.auth.getToken API method.  

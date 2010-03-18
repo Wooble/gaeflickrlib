@@ -1,7 +1,6 @@
 """Flickr API for Google App Engine"""
-__version__ = "0.3"
+__version__ = "0.4"
         
-
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
 from google.appengine.ext import db
@@ -22,11 +21,6 @@ except ImportError:
 
 def get_text(nodelist):
     """Helper function to pull text out of XML nodes."""
-#     retval = ""
-#     for node in nodelist:
-#         #            logging.debug(node.nodeType)
-#         if node.nodeType == node.TEXT_NODE:
-#            retval = retval + node.data
     retval = ''.join([node.data for node in nodelist if node.nodeType == node.TEXT_NODE]) 
     return retval
 
@@ -67,7 +61,11 @@ class GFLToken:
 
 class GaeFlickrLibException(Exception):
     """Exception class for Flickr exceptions."""
-    pass
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return self.message
+    
 
 
 class GFLPhoto:
@@ -125,18 +123,21 @@ class GFLPhotoList:
 class GaeFlickrLib:
     """Connection to Flickr API"""
     def __init__(self, api_key=None, **p):
-        if api_key is None:
-            raise GaeFlickrLibException, "api_key not provided"
+        if api_key or API_KEY:
+            self.api_key = api_key or API_KEY
         else:
-            self.api_key = api_key
-            if 'api_secret' in p:
-                self.api_secret = p['api_secret']
-            else:
-                self.api_secret = None
-            if 'token' in p:
-                self.token = p['token']
-            else:
-                self.token = None
+            raise GaeFlickrLibException, "api_key not provided"
+
+        if 'api_secret' in p:
+            self.api_secret = p['api_secret']
+        elif API_SECRET is not None:
+            self.api_secret = API_SECRET
+        else:
+            self.api_secret = None
+        if 'token' in p:
+            self.token = p['token']
+        else:
+            self.token = None
         
     def execute(self, method, auth=None, args=None):
         """Run a Flickr method, returns rsp element from REST response.
@@ -267,9 +268,28 @@ class GaeFlickrLib:
         raise NotImplementedError
 
 # auth
-    def auth_checkToken(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+    def auth_checkToken(self, auth_token = None):
+        """Check the validity of a token.
+
+        Accepts the token as a string or a GFLToken object (or any object
+        which, like a GFLToken, defines __str__ to return a token as a string...)
+
+        Returns False if token was invalid, or a GFLToken object if it was valid.
+        
+        """
+        if auth_token is None:
+            raise GaeFlickrException, "auth_checkToken \
+            requires auth_token argument"
+        else:
+            try:
+                rsp = self.execute('flickr.auth.checkToken',
+                                   args = {'auth_token': str(auth_token)})
+                return GFLToken(rsp)
+            except GaeFlickrLibException, message:
+                if str(message).find('98') != -1:
+                    return False
+                else:
+                    raise
 
     def auth_getFrob(self):
         """Not yet implemented"""

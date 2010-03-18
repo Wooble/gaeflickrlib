@@ -514,6 +514,22 @@ page (Optional)
         """Not yet implemented"""
         raise NotImplementedError
 
+    def people_getPhotos(self, user_id = None, **args):
+        """get photos by a given user, viewable by the authenticated user"""
+        if user_id is None:
+            raise GaeFlickrLibException, "user_id not provided"
+        else:
+            args['user_id'] = user_id
+            rsp = self.execute('flickr.people.getPhotos', args=args)
+            
+            plist = GFLPhotoList(rsp)
+            logging.debug(plist)
+            if plist:
+                return plist
+            else:
+                raise GaeFlickrLibException, "no photo list"
+        
+
     def people_getPhotosOf(self):
         """Not yet implemented"""
         raise NotImplementedError

@@ -292,8 +292,14 @@ class GaeFlickrLib:
                     raise
 
     def auth_getFrob(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+        """Get a frob to use for desktop authentication.
+
+        This method is probably not useful for a webapp, but included
+        for completeness (or for interactive use of the remote_api shell)
+
+        """
+        rsp = self.execute('flickr.auth.getFrob')
+        return str(get_text(rsp.getElementsByTagName('frob')[0].childNodes))
 
     def auth_getFullToken(self, mini_token = None):
         """convert a mini-token to a full auth token,

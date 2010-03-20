@@ -567,9 +567,14 @@ page (Optional)
         """Not yet implemented"""
         raise NotImplementedError
 
-    def photos_delete(self):
-        """Not yet implemented"""
-        raise NotImplementedError
+    def photos_delete(self, **args):
+        """Delete a photo"""
+        if not 'photo_id' in args:
+            raise GaeFlickrLibException, "flickr.photos.delete requires \
+            photo_id."
+        else:
+            rsp = self.execute('flickr.photos.delete', args = args)
+            return True
 
     def photos_getAllContexts(self):
         """Not yet implemented"""

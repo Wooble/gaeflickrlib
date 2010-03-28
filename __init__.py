@@ -6,7 +6,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from gaeflickrlib.models import *
+from models import *
 
 import logging
 import urllib

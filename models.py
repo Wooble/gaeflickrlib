@@ -1,3 +1,6 @@
+from google.appengine.ext import db
+import logging
+
 class GFLToken:
     """A Flickr auth token"""
 

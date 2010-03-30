@@ -16,7 +16,7 @@ try:
     import gaeflconfig
     API_KEY = gaeflconfig.API_KEY
     API_SECRET = gaeflconfig.API_SECRET
-    GAE_PERMS = gaeflconfig.GAE_PERMS
+
 except ImportError:
     logging.warn("no gaeflconfig found")
     

@@ -6,11 +6,18 @@
 Welcome to gaeflickrlib's documentation!
 ========================================
 
+Note: this documentation is a work in progress; much of the package's
+functionality remains undocumented, even where it has been
+implemented.  This package is alpha software.
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
-   configuration.rst
+
+   configuration
+   started
+
 
 Indices and tables
 ==================

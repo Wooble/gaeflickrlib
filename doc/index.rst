@@ -17,7 +17,7 @@ Contents:
 
    configuration
    started
-
+   api
 
 Indices and tables
 ==================

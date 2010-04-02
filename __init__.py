@@ -18,7 +18,7 @@ try:
     API_SECRET = gaeflconfig.API_SECRET
 
 except ImportError:
-    logging.warn("no gaeflconfig found")
+    logging.warn("no module gaeflconfig found in path")
     
 
 def get_text(nodelist):

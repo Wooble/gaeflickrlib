@@ -42,4 +42,4 @@ documentation.
 
    .. method:: photos_search
 
-   .. method:: 
+

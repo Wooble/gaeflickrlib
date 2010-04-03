@@ -45,7 +45,7 @@ class GaeFlickrLibException(Exception):
         return self.message
 
 
-class GaeFlickrLib:
+class GaeFlickrLib(object):
     """Connection to Flickr API"""
     def __init__(self, api_key=None, **p):
         if api_key or API_KEY:
@@ -64,6 +64,25 @@ class GaeFlickrLib:
         else:
             self.token = None
         
+    def __getattr__(self, module):
+        mods = ['activity', 'auth', 'blogs', 'collections',
+                'commons', 'contacts', 'favorites', 'galleries',
+                'groups', 'interestingness', 'machinetags',
+                'panda', 'people', 'photos', 'photosets',
+                'places', 'prefs', 'reflection', 'stats', 'tags',
+                'test', 'urls']
+        if module in mods:
+            try:
+                fullmod = 'gaeflickrlib.' + module
+                _temp = __import__(fullmod)
+                return getattr(_temp, module).Dispatcher(self)
+            except ImportError:
+                raise NotImplementedError
+                
+        else:
+            raise AttributeError
+        
+
     def execute(self, method, auth=None, args=None):
         """Run a Flickr method, returns rsp element from REST response.
         defaults to using authenticated call if an api_secret was given
@@ -183,80 +202,7 @@ class GaeFlickrLib:
         return url
 
 
-# activity
-    def activity_userComments(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def activity_userPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
 # auth
-    def auth_checkToken(self, auth_token = None):
-        """Check the validity of a token.
-
-        Accepts the token as a string or a GFLToken object (or any object
-        which, like a GFLToken, defines __str__ to return a token as a string...)
-
-        Returns False if token was invalid, or a GFLToken object if it was valid.
-        
-        """
-        if auth_token is None:
-            raise GaeFlickrException, "auth_checkToken \
-            requires auth_token argument"
-        else:
-            try:
-                rsp = self.execute('flickr.auth.checkToken',
-                                   args = {'auth_token': str(auth_token)})
-                return GFLToken(rsp)
-            except GaeFlickrLibException, message:
-                if str(message).find('98') != -1:
-                    return False
-                else:
-                    raise
-
-    def auth_getFrob(self):
-        """Get a frob to use for desktop authentication.
-
-        This method is probably not useful for a webapp, but included
-        for completeness (or for interactive use of the remote_api shell)
-
-        """
-        rsp = self.execute('flickr.auth.getFrob')
-        return str(get_text(rsp.getElementsByTagName('frob')[0].childNodes))
-
-    def auth_getFullToken(self, mini_token = None):
-        """convert a mini-token to a full auth token,
-
-        returns a GFLToken object.
-        """
-        if mini_token is not None:
-            rsp = self.execute('flickr.auth.getFullToken',
-                               args = {'mini_token':mini_token})
-            token = GFLToken(rsp)
-            return token
-        else:
-            raise GaeFlickrLibException, "auth_getFullToken \
-            requires a frob."
-        
-
-    def auth_getToken(self, frob = None):
-        """implements flickr.auth.getToken API method.  
-        requires a frob (sent in callback from login URL)
-        """
-        if frob is not None:
-            rsp = self.execute('flickr.auth.getToken', args = {'frob':frob})
-            token = GFLToken(rsp)
-            return token
-        else:
-            raise GaeFlickrLibException, "auth_getToken requires a frob."
-
-    def auth_getToken_full(self, frob = None):
-        """for backwards compatibility; deprecated"""
-        logging.warning("""auth_getToken_full is deprecated;
-        use auth_getToken instead""")
-        return self.auth_getToken(frob)
 
 # blogs
     def blogs_getList(self):

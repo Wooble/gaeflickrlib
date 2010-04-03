@@ -247,41 +247,6 @@ class GaeFlickrLib(object):
         """Not yet implemented"""
         raise NotImplementedError
 
-# favorites
-    def favorites_add(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def favorites_getList(self, **args):
-        """user_id (Optional)
-    The NSID of the user to fetch the favorites list for. If this argument is omitted, the favorites list for the calling user is returned.
-min_fave_date (Optional)
-    Minimum date that a photo was favorited on. The date should be in the form of a unix timestamp.
-max_fave_date (Optional)
-    Maximum date that a photo was favorited on. The date should be in
-    the form of a unix timestamp.  
-extras (Optional)
-    A comma-delimited list of extra information to fetch for each
-returned record. Currently supported fields are: license, date_upload,
-date_taken, owner_name, icon_server, original_format, last_update,
-geo, tags, machine_tags, o_dims, views, media.  per_page (Optional)
-
-    Number of photos to return per page. If this argument is omitted, it defaults to 100. The maximum allowed value is 500.
-page (Optional)
-    The page of results to return. If this argument is omitted, it defaults 
-    to 1."""
-        rsp = self.execute('flickr.favorites.getList', args=args)
-        plist = GFLPhotoList(rsp)
-        return plist
-
-
-    def favorites_getPublicList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def favorites_remove(self):
-        """Not yet implemented"""
-        raise NotImplementedError
 
 # galleries
     def galleries_addPhoto(self):

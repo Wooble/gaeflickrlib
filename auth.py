@@ -1,5 +1,6 @@
 """flickr.auth.* methods"""
 from gaeflickrlib import GaeFlickrLibException
+import new
 
 class Dispatcher(object):
     def __init__(self, flickrobj):
@@ -22,7 +23,7 @@ class Dispatcher(object):
                     rsp = self.flickrobj.execute(fullmethod,
                                             args = kargs)
                 except GaeFlickrLibException, message:
-                    if method == checkToken and str(message).find('98') != -1:
+                    if (method == 'checkToken') and ('98' in str(message)):
                         return False
                     else:
                         raise
@@ -31,8 +32,8 @@ class Dispatcher(object):
                         from gaeflickrlib import get_text
                         return str(get_text(rsp.getElementsByTagName('frob')[0].childNodes))
                     elif methmeta[0] == 'GFLToken':
-                        from gaeflickrlib import GFLToken
+                        from gaeflickrlib.models import GFLToken
                         return GFLToken(rsp)
-            return instancemethod(dyn_method, self, self.__class__)
+            return new.instancemethod(dyn_method, self, self.__class__)
         else:
             raise AttributeError

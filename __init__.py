@@ -78,7 +78,12 @@ class GaeFlickrLib(object):
                 return getattr(_temp, module).Dispatcher(self)
             except ImportError:
                 raise NotImplementedError
-                
+        elif '_' in module: #backwards-compatibility
+            parts = module.split('_')
+            m = self
+            for part in parts:
+                m = getattr(m, part)
+            return m
         else:
             raise AttributeError
         
@@ -129,53 +134,16 @@ class GaeFlickrLib(object):
             emsg = err.getAttribute('msg')
             raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
 
-
-    def execute_json(self, method, auth=None, args=None):
-        """Execute a Flickr method, using json response format"""
-
-        from django.utils import simplejson
-        import re
-        args = args or {}
-        if auth is None:
-            if self.api_secret is None:
-                auth = False
-            else:
-                auth = True
-        args['api_key'] = self.api_key
-        args['method'] = method
-        args['format'] = 'json'
-        if auth:
-            if self.api_secret is None:
-                raise GaeFlickrLibException, "can't use auth without secret"
-            else:
-                args['api_sig'] = self.sign(args)
-
-        url = 'http://api.flickr.com/services/rest/?'
-        for key, value in args.items():
-            logging.debug("args-items %s %s\n", key, value)
-            url += urllib.quote(str(key)) + '=' + urllib.quote(str(value)) + '&'
-        url = url.rstrip('&')
-        logging.debug(url)
-        resp = urlfetch.fetch(url)
-        rejs = resp.content
-        logging.debug(rejs)
-        rejs2 = re.sub(r'^jsonFlickrApi\(', '', rejs)
-        rejs = re.sub(r'\)$', '', rejs2)
-        respdata = simplejson.loads(rejs)
-        if respdata['stat'] == 'ok':
-            return respdata['stat']
-        else:
-            ecode = respdata['err']['code']
-            emsg = respdata['err']['emsg']
-            raise GaeFlickrLibException, "API error: %s - %s" % (ecode, emsg)
-
     def sign (self, args):
         """returns an API sig for the arguments in args.  
-        Note: if calling this manually, you must include your API key and 
-        method in the args to get a valid signature.  This method is called
-        automatically when needed by execute and other methodss.
+
+        This method is called automatically when needed by execute()
+        and other methods.
         """
+        
         import hashlib
+        if not 'api_key' in args and self.api_key:
+            args['api_key'] = self.api_key
         authstring = self.api_secret
         keylist = args.keys()
         keylist.sort()
@@ -185,20 +153,23 @@ class GaeFlickrLib(object):
         hasher.update(authstring)
         return str(hasher.hexdigest())
 
-    def login_url(self, perms = 'write'):
-        """returns a login URL for your application. set perms to
-        'read' (default), 'write', or 'delete'.
-        After logging in, user will be redirected by Flickr to the URL you set
-        in your API key setup.
+    def login_url(self, perms = 'read'):
+        """returns a login URL for your application.
+
+        set perms to 'read' (default), 'write', or 'delete'.  After
+        logging in, user will be redirected by Flickr to the URL you
+        set in your API key setup.
         """
+        
         url = 'http://flickr.com/services/auth/?'
         pieces = {}
         pieces['api_key'] = self.api_key
         pieces['perms'] = perms
         pieces['api_sig'] = self.sign(pieces)
+        pieces2 = []
         for key, val in pieces.items():
-            url += key + '=' + val + '&'
-        url = url.rstrip('&')
+            pieces2.append("%s=%s" % (key, val))
+        url = '&'.join(pieces2)
         return url
 
 

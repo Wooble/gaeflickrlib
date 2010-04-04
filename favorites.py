@@ -1,5 +1,6 @@
 """flickr.favorites.* methods"""
 from gaeflickrlib import GaeFlickrLibException
+import new
 
 class Dispatcher(object):
     def __init__(self, flickrobj):
@@ -26,6 +27,6 @@ class Dispatcher(object):
                 elif methmeta[0] == 'GFLPhotoList':
                     from gaeflickrlib import GFLPhotoList
                     return GFLPhotoList(rsp)
-            return instancemethod(dyn_method, self, self.__class__)
+            return new.instancemethod(dyn_method, self, self.__class__)
         else:
             raise AttributeError

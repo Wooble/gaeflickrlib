@@ -30,7 +30,7 @@ class GFLPhoto:
     def __init__(self, photo):
         self.data = {}
         #logging.debug("GFLPhoto __init__: " + photo.toxml())
-        for key, value  in photo.attributes.items():
+        for key, value in photo.attributes.items():
             self.data[key] = value
 
     def url(self, size = None):

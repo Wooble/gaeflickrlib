@@ -1,5 +1,5 @@
 """Flickr API for Google App Engine"""
-__version__ = "0.4"
+__version__ = "0.5"
         
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp

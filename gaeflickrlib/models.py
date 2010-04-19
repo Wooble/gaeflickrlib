@@ -70,8 +70,11 @@ class GFLPhotoList:
         return self.photos.__iter__()
 
     def __getitem__(self, key):
-        return self.metadata[key]
-
+        try:
+            return self.metadata[key]
+        except KeyError:
+            return self.photos[key]
+        
     def __setitem__(self, key, data):
         self.metadata[key] = data
 

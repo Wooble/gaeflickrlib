@@ -234,7 +234,7 @@ class GaeMetaDispatcher(object):
     def __getattr__(self, attr):
         newmethod = self.method + "." + attr
         return GaeMetaDispatcher(method = newmethod, flickrObj = self.flickrObj)
-    def __call__(self):
+    def __call__(self, **kargs):
         try:
             methmeta = METHODS[self.method]
         except AttributeError:
@@ -244,7 +244,7 @@ class GaeMetaDispatcher(object):
                 raise GaeFlickrLibException, "%s method requires \
                 argument %s" % [fullmethod, req_param]
         try:
-            rsp = self.flickrObj.execute(fullmethod,
+            rsp = self.flickrObj.execute(self.method,
                                          args = kargs)
         except GaeFlickrLibException, message:
             if methmeta[2] is not None:
@@ -277,28 +277,7 @@ class GaeFlickrLib(object):
             self.token = None
         
     def __getattr__(self, module):
-        mods = ['activity', 'auth', 'blogs', 'collections',
-                'commons', 'contacts', 'favorites', 'galleries',
-                'groups', 'interestingness', 'machinetags',
-                'panda', 'people', 'photos', 'photosets',
-                'places', 'prefs', 'reflection', 'stats', 'tags',
-                'test', 'urls']
-        if module in mods:
-            try:
-                fullmod = 'gaeflickrlib.' + module
-                _temp = __import__(fullmod)
-                return getattr(_temp, module).Dispatcher(self)
-            except ImportError:
-                raise NotImplementedError
-        elif '_' in module: #backwards-compatibility
-            parts = module.split('_')
-            m = self
-            for part in parts:
-                m = getattr(m, part)
-            return m
-        else:
-            raise AttributeError
-        
+        return GaeMetaDispatcher(flickrObj = self, method = "flickr." + module)
 
     def execute(self, method, auth=None, args=None):
         """Run a Flickr method, returns rsp element from REST response.

@@ -6,7 +6,9 @@ from google.appengine.ext import webapp
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from models import *
+#from models import *
+
+import models
 
 import logging
 import urllib
@@ -19,7 +21,183 @@ try:
 
 except ImportError:
     logging.warn("no module gaeflconfig found in path")
-    
+
+
+METHODS = {
+    'flickr.activity.userComments': [None, [], None],
+    'flickr.activity.userPhotos': [None, [], None],
+    'flickr.auth.checkToken': ['GFLToken', ['auth_token'], None], #needs exception handler
+    'flickr.auth.getFrob': ['GFLFrob', [], None], # GFLFron not implemented yet
+    'flickr.auth.getFullToken': ['GFLToken', ['mini_token'], None],
+    'flickr.auth.getToken': ['GFLToken', ['frob'], None],
+    'flickr.blogs.getList': [None, [], None],
+    'flickr.blogs.getServices': [None, [], None],
+    'flickr.blogs.postPhoto': [None, [], None],
+    'flickr.collections.getInfo': [None, [], None],
+    'flickr.collections.getTree': [None, [], None],
+    'flickr.commons.getInstitutions': [None, [], None],
+    'flickr.contacts.getList': [None, [], None],
+    'flickr.contacts.getListRecentlyUploaded': [None, [], None],
+    'flickr.contacts.getPublicList': [None, [], None],
+    'flickr.favorites.add': [None, ['photo_id'], None],
+    'flickr.favorites.getList': ['GFLPhotoList', [], None],
+    'flickr.favorites.getPublicList': ['GFLPhotoList', ['user_id'], None],
+    'flickr.favorites.remove': [None, ['photo_id'], None],
+    'flickr.galleries.addPhoto': [None, [], None],
+    'flickr.galleries.create': [None, [], None],
+    'flickr.galleries.editMeta': [None, [], None],
+    'flickr.galleries.editPhoto': [None, [], None],
+    'flickr.galleries.editPhotos': [None, [], None],
+    'flickr.galleries.getInfo': [None, [], None],
+    'flickr.galleries.getList': [None, [], None],
+    'flickr.galleries.getListForPhoto': [None, [], None],
+    'flickr.galleries.getPhotos': [None, [], None],
+    'flickr.groups.browse': [None, [], None],
+    'flickr.groups.getInfo': [None, [], None],
+    'flickr.groups.members.getList': [None, [], None],
+    'flickr.groups.pools.add': [None, [], None],
+    'flickr.groups.pools.getContext': [None, [], None],
+    'flickr.groups.pools.getGroups': [None, [], None],
+    'flickr.groups.pools.getPhotos': ['GFLPhotoList', ['group_id'], None],
+    'flickr.groups.pools.remove': [None, ['group_id', 'photo_id'], None],
+    'flickr.groups.search': [None, [], None],
+    'flickr.interestingness.getList': [None, [], None],
+    'flickr.machinetags.getNamespaces': [None, [], None],
+    'flickr.machinetags.getPairs': [None, [], None],
+    'flickr.machinetags.getPredicates': [None, [], None],
+    'flickr.machinetags.getRecentValues': [None, [], None],
+    'flickr.machinetags.getValues': [None, [], None],
+    'flickr.panda.getList': [None, [], None],
+    'flickr.panda.getPhotos': [None, [], None],
+    'flickr.people.findByEmail': [None, [], None],
+    'flickr.people.findByUsername': [None, [], None],
+    'flickr.people.getInfo': [None, [], None],
+    'flickr.people.getPhotos': ['GFLPhotoList', ['user_id'], None],
+    'flickr.people.getPhotosOf': [None, [], None],
+    'flickr.people.getPublicGroups': [None, [], None],
+    'flickr.people.getPublicPhotos': ['GFLPhotoList', ['user_id'], None],
+    'flickr.people.getUploadStatus': [None, [], None],
+    'flickr.photos.addTags': [None, [], None],
+    'flickr.photos.comments.addComment': [None, [], None],
+    'flickr.photos.comments.deleteComment': [None, [], None],
+    'flickr.photos.comments.editComment': [None, [], None],
+    'flickr.photos.comments.getList': [None, [], None],
+    'flickr.photos.comments.getRecentForContacts': [None, [], None],
+    'flickr.photos.delete': [None, ['photo_id'], None],
+    'flickr.photos.geo.batchCorrectLocation': [None, [], None],
+    'flickr.photos.geo.correctLocation': [None, [], None],
+    'flickr.photos.geo.getLocation': [None, [], None],
+    'flickr.photos.geo.getPerms': [None, [], None],
+    'flickr.photos.geo.photosForLocation': [None, [], None],
+    'flickr.photos.geo.removeLocation': [None, [], None],
+    'flickr.photos.geo.setContext': [None, [], None],
+    'flickr.photos.geo.setLocation': [None, [], None],
+    'flickr.photos.geo.setPerms': [None, [], None],
+    'flickr.photos.getAllContexts': [None, [], None],
+    'flickr.photos.getContactsPhotos': ['GFLPhotoList', [], None],
+    'flickr.photos.getContactsPublicPhotos': ['GFLPhotoList', [], None],
+    'flickr.photos.getContext': [None, [], None],
+    'flickr.photos.getCounts': [None, [], None],
+    'flickr.photos.getExif': [None, [], None],
+    'flickr.photos.getFavorites': [None, [], None],
+    'flickr.photos.getInfo': [None, [], None],
+    'flickr.photos.getNotInSet': [None, [], None],
+    'flickr.photos.getPerms': [None, [], None],
+    'flickr.photos.getRecent': [None, [], None],
+    'flickr.photos.getSizes': [None, [], None],
+    'flickr.photos.getUntagged': [None, [], None],
+    'flickr.photos.getWithGeoData': [None, [], None],
+    'flickr.photos.getWithoutGeoData': [None, [], None],
+    'flickr.photos.licenses.getInfo': [None, [], None],
+    'flickr.photos.licenses.setLicense': [None, [], None],
+    'flickr.photos.notes.add': [None, [], None],
+    'flickr.photos.notes.delete': [None, [], None],
+    'flickr.photos.notes.edit': [None, [], None],
+    'flickr.photos.people.add': [None, [], None],
+    'flickr.photos.people.delete': [None, [], None],
+    'flickr.photos.people.deleteCoords': [None, [], None],
+    'flickr.photos.people.editCoords': [None, [], None],
+    'flickr.photos.people.getList': [None, [], None],
+    'flickr.photos.recentlyUpdated': [None, [], None],
+    'flickr.photos.removeTag': [None, [], None],
+    'flickr.photos.search': ['GFLPhotoList', [], None],
+    'flickr.photos.setContentType': [None, [], None],
+    'flickr.photos.setDates': [None, [], None],
+    'flickr.photos.setMeta': [None, [], None],
+    'flickr.photos.setPerms': [None, [], None],
+    'flickr.photos.setSafetyLevel': [None, [], None],
+    'flickr.photos.setTags': [None, [], None],
+    'flickr.photos.transform.rotate': [None, [], None],
+    'flickr.photos.upload.checkTickets': [None, [], None],
+    'flickr.photosets.addPhoto': [None, [], None],
+    'flickr.photosets.comments.addComment': [None, [], None],
+    'flickr.photosets.comments.deleteComment': [None, [], None],
+    'flickr.photosets.comments.editComment': [None, [], None],
+    'flickr.photosets.comments.getList': [None, [], None],
+    'flickr.photosets.create': [None, [], None],
+    'flickr.photosets.delete': [None, [], None],
+    'flickr.photosets.editMeta': [None, [], None],
+    'flickr.photosets.editPhotos': [None, [], None],
+    'flickr.photosets.getContext': [None, [], None],
+    'flickr.photosets.getInfo': [None, [], None],
+    'flickr.photosets.getList': [None, [], None],
+    'flickr.photosets.getPhotos': [None, [], None],
+    'flickr.photosets.orderSets': [None, [], None],
+    'flickr.photosets.removePhoto': [None, [], None],
+    'flickr.places.find': [None, [], None],
+    'flickr.places.findByLatLon': [None, [], None],
+    'flickr.places.getChildrenWithPhotosPublic': [None, [], None],
+    'flickr.places.getInfo': [None, [], None],
+    'flickr.places.getInfoByUrl': [None, [], None],
+    'flickr.places.getPlaceTypes': [None, [], None],
+    'flickr.places.getShapeHistory': [None, [], None],
+    'flickr.places.getTopPlacesList': [None, [], None],
+    'flickr.places.placesForBoundingBox': [None, [], None],
+    'flickr.places.placesForContacts': [None, [], None],
+    'flickr.places.placesForTags': [None, [], None],
+    'flickr.places.placesForUser': [None, [], None],
+    'flickr.places.resolvePlaceId': [None, [], None],
+    'flickr.places.resolvePlaceURL': [None, [], None],
+    'flickr.places.tagsForPlace': [None, [], None],
+    'flickr.prefs.getContentType': [None, [], None],
+    'flickr.prefs.getGeoPerms': [None, [], None],
+    'flickr.prefs.getHidden': [None, [], None],
+    'flickr.prefs.getPrivacy': [None, [], None],
+    'flickr.prefs.getSafetyLevel': [None, [], None],
+    'flickr.reflection.getMethodInfo': [None, [], None],
+    'flickr.reflection.getMethods': [None, [], None],
+    'flickr.stats.getCollectionDomains': [None, [], None],
+    'flickr.stats.getCollectionReferrers': [None, [], None],
+    'flickr.stats.getCollectionStats': [None, [], None],
+    'flickr.stats.getPhotoDomains': [None, [], None],
+    'flickr.stats.getPhotoReferrers': [None, [], None],
+    'flickr.stats.getPhotosetDomains': [None, [], None],
+    'flickr.stats.getPhotosetReferrers': [None, [], None],
+    'flickr.stats.getPhotosetStats': [None, [], None],
+    'flickr.stats.getPhotoStats': [None, [], None],
+    'flickr.stats.getPhotostreamDomains': [None, [], None],
+    'flickr.stats.getPhotostreamReferrers': [None, [], None],
+    'flickr.stats.getPhotostreamStats': [None, [], None],
+    'flickr.stats.getPopularPhotos': [None, [], None],
+    'flickr.stats.getTotalViews': [None, [], None],
+    'flickr.tags.getClusterPhotos': [None, [], None],
+    'flickr.tags.getClusters': [None, [], None],
+    'flickr.tags.getHotList': [None, [], None],
+    'flickr.tags.getListPhoto': [None, [], None],
+    'flickr.tags.getListUser': [None, [], None],
+    'flickr.tags.getListUserPopular': [None, [], None],
+    'flickr.tags.getListUserRaw': [None, [], None],
+    'flickr.tags.getRelated': [None, [], None],
+    'flickr.test.echo': [None, [], None],
+    'flickr.test.login': [None, [], None],
+    'flickr.test.null': [None, [], None],
+    'flickr.urls.getGroup': [None, [], None],
+    'flickr.urls.getUserPhotos': [None, [], None],
+    'flickr.urls.getUserProfile': [None, [], None],
+    'flickr.urls.lookupGallery': [None, [], None],
+    'flickr.urls.lookupGroup': [None, [], None],
+    'flickr.urls.lookupUser': [None, [], None],
+    }
 
 def get_text(nodelist):
     """Helper function to pull text out of XML nodes."""
@@ -44,6 +222,40 @@ class GaeFlickrLibException(Exception):
     def __str__(self):
         return self.message
 
+
+class GaeMetaDispatcher(object):
+    def __init__(self, method = None, flickrObj = None):
+        if flickrObj is None:
+            raise GaeFlickrLibException("meta dispatcher needs GaeFlickrLib object")
+        if method is None:
+            method = "flickr"
+        self.method = method
+        self.flickrObj = flickrObj
+    def __getattr__(self, attr):
+        newmethod = self.method + "." + attr
+        return GaeMetaDispatcher(method = newmethod, flickrObj = self.flickrObj)
+    def __call__(self):
+        try:
+            methmeta = METHODS[self.method]
+        except AttributeError:
+            raise GaeFlickrLibException("unknown method %s" % self.method)
+        for req_param in methmeta[1]:
+            if not req_param in kargs:
+                raise GaeFlickrLibException, "%s method requires \
+                argument %s" % [fullmethod, req_param]
+        try:
+            rsp = self.flickrObj.execute(fullmethod,
+                                         args = kargs)
+        except GaeFlickrLibException, message:
+            if methmeta[2] is not None:
+                methmeta[2](message)
+            else:
+                raise
+        retobj = getattr(models, methmeta[0], None)
+        if retobj is not None:
+            return retobj(rsp)
+        else:
+            return rsp
 
 class GaeFlickrLib(object):
     """Connection to Flickr API"""
@@ -171,707 +383,6 @@ class GaeFlickrLib(object):
             pieces2.append("%s=%s" % (key, val))
         url = '&'.join(pieces2)
         return url
-
-
-# auth
-
-# blogs
-    def blogs_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def blogs_getServices(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def blogs_postPhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# collections
-
-
-    def collections_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def collections_getTree(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# commons
-
-    def commons_getInstitutions(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# contacts
-    def contacts_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def contacts_getListRecentlyUploaded(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def contacts_getPublicList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-
-# galleries
-    def galleries_addPhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def galleries_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def galleries_getListForPhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-
-# groups
-    def groups_browse(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def groups_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def groups_search(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# groups.pools
-    def groups_pools_add(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def groups_pools_getContext(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def groups_pools_getGroups(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def groups_pools_getPhotos(self, **args):
-        """get photos in a group pool"""
-        if not 'group_id' in args:
-            raise GaeFlickrLibException, "flickr.groups.pools.getPhotos \
-            requires group_id"
-        else:
-            rsp = self.execute('flickr.groups.pools.getPhotos', args=args)
-            plist = GFLPhotoList(rsp)
-            return plist
-
-    def groups_pools_remove(self, **args):
-        """Remove a photo from a flickr group"""
-        if not 'group_id' in args:
-            raise GaeFlickrLibException, "flickr.groups.pools.remove requires \
-            group_id"
-        elif not 'photo_id' in args:
-            raise GaeFlickrLibException, "flickr.groups.pools.remove requires \
-            photo_id"
-        else:
-            rsp = self.execute('flickr.groups.pools.remove', args=args)
-            return rsp
-
-
-# interestingness
-    def interestingness_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# machinetags
-    def machinetags_getNamespaces(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def machinetags_getPairs(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def machinetags_getPredicates(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def machinetags_getRecentValues(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def machinetags_getValues(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# people
-    def people_findByEmail(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def people_findByUsername(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def people_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def people_getPhotos(self, user_id = None, **args):
-        """get photos by a given user, viewable by the authenticated user"""
-        if user_id is None:
-            raise GaeFlickrLibException, "user_id not provided"
-        else:
-            args['user_id'] = user_id
-            rsp = self.execute('flickr.people.getPhotos', args=args)
-            
-            plist = GFLPhotoList(rsp)
-            logging.debug(plist)
-            if plist:
-                return plist
-            else:
-                raise GaeFlickrLibException, "no photo list"
-        
-
-    def people_getPhotosOf(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def people_getPublicGroups(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def people_getPublicPhotos(self, user_id = None, **args):
-        """get a user's public photos"""
-        if user_id is None:
-            raise GaeFlickrLibException, "user_id not provided"
-        else:
-            args['user_id'] = user_id
-
-            rsp = self.execute('flickr.people.getPublicPhotos', args=args)
-            
-            plist = GFLPhotoList(rsp)
-            logging.debug(plist)
-            if plist:
-                return plist
-            else:
-                raise GaeFlickrLibException, "no photo list"
-
-    def people_getUploadStatus(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos
-    def photos_addTags(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_delete(self, **args):
-        """Delete a photo"""
-        if not 'photo_id' in args:
-            raise GaeFlickrLibException, "flickr.photos.delete requires \
-            photo_id."
-        else:
-            rsp = self.execute('flickr.photos.delete', args = args)
-            return True
-
-    def photos_getAllContexts(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getContactsPhotos(self, **args):
-        """Arguments
-
-count (Optional) Number of photos to return. Defaults to 10, maximum
-    50. This is only used if single_photo is not passed.
-
-just_friends (Optional) set as 1 to only show photos from friends and
-    family (excluding regular contacts).
-
-single_photo (Optional) Only fetch one photo (the latest) per contact,
-    instead of all photos in chronological order.
-
-include_self (Optional) Set to 1 to include photos from the calling
-    user.
-
-extras (Optional) A comma-delimited list of extra information to fetch
-    for each returned record. Currently supported fields are: license,
-    date_upload, date_taken, owner_name, icon_server, original_format,
-    last_update."""
-        rsp = self.execute('flickr.photos.getContactsPhotos', args=args)
-        plist = GFLPhotoList(rsp)
-        return plist
-
-    def photos_getContactsPublicPhotos(self, **args):
-        """Arguments 
-        
-    user_id (Required) The NSID of the user to fetch photos for.
-        
-    count (Optional) Number of photos to return. Defaults to 10,
-        maximum 50. This is only used if single_photo is not passed.
-        
-    just_friends (Optional) set as 1 to only show photos from friends
-        and family (excluding regular contacts).
-        
-    single_photo (Optional) Only fetch one photo (the latest) per
-        contact, instead of all photos in chronological order.
-        
-    include_self (Optional)
-        Set to 1 to include photos from the user specified by user_id.
-        
-    extras (Optional) A comma-delimited list of extra information to
-        fetch for each returned record. Currently supported fields
-        are: license, date_upload, date_taken, owner_name,
-        icon_server, original_format, last_update."""
-        if not 'user_id' in args:
-            raise GaeFlickrLibException, "flickr.photos.getContactsPublic\
-            Photos requires user_id"
-        else:
-            rsp = self.execute('flickr.photos.getContactsPublicPhotos',
-                               args=args)
-            plist = GFLPhotoList(rsp)
-            return plist
-
-    def photos_getContext(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getCounts(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getExif(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getFavorites(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getInfo(self, **args):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getNotInSet(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getPerms(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getRecent(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getSizes(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getUntagged(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getWithGeoData(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_getWithoutGeoData(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_recentlyUpdated(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_removeTag(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_search(self, **args):
-        """Search for a photo"""
-        if args is None:
-            raise GaeFlickrLibException, "search requires parameters"
-        else:
-            rsp = self.execute('flickr.photos.search', args=args)
-            plist = GFLPhotoList(rsp)
-            return plist
-
-
-    def photos_setContentType(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_setDates(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_setMeta(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_setPerms(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_setSafetyLevel(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_setTags(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.comments(self):
-    def photos_comments_addComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_comments_deleteComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_comments_editComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_comments_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_comments_getRecentForContacts(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.geo(self):
-    def photos_geo_batchCorrectLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_correctLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_getLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_getPerms(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_photosForLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_removeLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_setContext(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_setLocation(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_geo_setPerms(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.licenses
-    def photos_licenses_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photos_licenses_setLicense(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.notes
-    def photos_notes_add(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photos_notes_delete(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photos_notes_edit(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.people
-    def photos_people_add(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_people_delete(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_people_deleteCoords(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_people_editCoords(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def photos_people_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-
-# photos.transform
-    def photos_transform_rotate(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photos.upload
-    def photos_upload_checkTickets(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photosets
-
-    def photosets_addPhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_create(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_delete(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_editMeta(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_editPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_getContext(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_getPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_orderSets(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_removePhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# photosets.comments
-    def photosets_comments_addComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_comments_deleteComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_comments_editComment(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def photosets_comments_getList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# places
-    def places_find(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_findByLatLon(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getChildrenWithPhotosPublic(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getInfoByUrl(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getPlaceTypes(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getShapeHistory(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_getTopPlacesList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_placesForBoundingBox(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_placesForContacts(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_placesForTags(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_placesForUser(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_resolvePlaceId(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_resolvePlaceURL(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def places_tagsForPlace(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-# prefs
-    def prefs_getContentType(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def prefs_getGeoPerms(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def prefs_getHidden(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def prefs_getPrivacy(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def prefs_getSafetyLevel(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-#reflection
-
-    def reflection_getMethodInfo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def reflection_getMethods(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-#stats
-    def stats_getCollectionDomains(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getCollectionReferrers(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getCollectionStats(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotoDomains(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotoReferrers(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotosetDomains(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotosetReferrers(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotosetStats(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotoStats(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotostreamDomains(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotostreamReferrers(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPhotostreamStats(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getPopularPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-    def stats_getTotalViews(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-
-#tags
-
-    def tags_getClusterPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getClusters(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getHotList(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getListPhoto(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getListUser(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getListUserPopular(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getListUserRaw(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def tags_getRelated(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-#test
-
-    def test_echo(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def test_login(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def test_null(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-
-#urls
-
-    def urls_getGroup(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def urls_getUserPhotos(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def urls_getUserProfile(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def urls_lookupGroup(self):
-        """Not yet implemented"""
-        raise NotImplementedError
-    def urls_lookupUser(self):
-        """Not yet implemented"""
-        raise NotImplementedError
 
 
 

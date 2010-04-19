@@ -277,6 +277,7 @@ class GaeFlickrLib(object):
             self.token = None
         
     def __getattr__(self, module):
+        module =  module.replace('_', '.') # backward compatibility
         return GaeMetaDispatcher(flickrObj = self, method = "flickr." + module)
 
     def execute(self, method, auth=None, args=None):

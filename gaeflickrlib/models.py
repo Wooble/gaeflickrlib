@@ -85,3 +85,14 @@ class FlickrAuthSession(db.Model):
     """
     tokenobj = db.TextProperty()
     session_date = db.DateTimeProperty(auto_now_add = True)
+
+class GFLFrob(db.Model):
+    def __init__(self, rsp):
+        from gaeflickrlib.helpers import get_text
+        self.frob =  str(get_text(rsp.getElementsByTagName('frob')[0].childNodes))
+    def __str__(self):
+        return self.frob
+    def __repr__(self):
+        return "<GFLFrob: %s>" % self.frob
+
+    

@@ -6,9 +6,9 @@ from google.appengine.ext import webapp
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-#from models import *
-
-import models
+from gaeflickrlib import models
+from gaeflickrlib.helpers import get_text
+import gaeflickrlib.exceptionhandlers as eh
 
 import logging
 import urllib
@@ -26,8 +26,8 @@ except ImportError:
 METHODS = {
     'flickr.activity.userComments': [None, [], None],
     'flickr.activity.userPhotos': [None, [], None],
-    'flickr.auth.checkToken': ['GFLToken', ['auth_token'], None], #needs exception handler
-    'flickr.auth.getFrob': ['GFLFrob', [], None], # GFLFron not implemented yet
+    'flickr.auth.checkToken': ['GFLToken', ['auth_token'], eh.checkToken], 
+    'flickr.auth.getFrob': ['GFLFrob', [], None],
     'flickr.auth.getFullToken': ['GFLToken', ['mini_token'], None],
     'flickr.auth.getToken': ['GFLToken', ['frob'], None],
     'flickr.blogs.getList': [None, [], None],
@@ -51,7 +51,7 @@ METHODS = {
     'flickr.galleries.getInfo': [None, [], None],
     'flickr.galleries.getList': [None, [], None],
     'flickr.galleries.getListForPhoto': [None, [], None],
-    'flickr.galleries.getPhotos': [None, [], None],
+    'flickr.galleries.getPhotos': ['GFLPhotoList', ['gallery_id'], None],
     'flickr.groups.browse': [None, [], None],
     'flickr.groups.getInfo': [None, [], None],
     'flickr.groups.members.getList': [None, [], None],
@@ -88,7 +88,7 @@ METHODS = {
     'flickr.photos.geo.correctLocation': [None, [], None],
     'flickr.photos.geo.getLocation': [None, [], None],
     'flickr.photos.geo.getPerms': [None, [], None],
-    'flickr.photos.geo.photosForLocation': [None, [], None],
+    'flickr.photos.geo.photosForLocation': ['GFLPhotoList', ['lat', 'lon'], None],
     'flickr.photos.geo.removeLocation': [None, [], None],
     'flickr.photos.geo.setContext': [None, [], None],
     'flickr.photos.geo.setLocation': [None, [], None],
@@ -101,13 +101,13 @@ METHODS = {
     'flickr.photos.getExif': [None, [], None],
     'flickr.photos.getFavorites': [None, [], None],
     'flickr.photos.getInfo': [None, [], None],
-    'flickr.photos.getNotInSet': [None, [], None],
+    'flickr.photos.getNotInSet': ['GFLPhotoList', [], None],
     'flickr.photos.getPerms': [None, [], None],
-    'flickr.photos.getRecent': [None, [], None],
+    'flickr.photos.getRecent': ['GFLPhotoList', [], None],
     'flickr.photos.getSizes': [None, [], None],
-    'flickr.photos.getUntagged': [None, [], None],
-    'flickr.photos.getWithGeoData': [None, [], None],
-    'flickr.photos.getWithoutGeoData': [None, [], None],
+    'flickr.photos.getUntagged': ['GFLPhotoList', [], None],
+    'flickr.photos.getWithGeoData': ['GFLPhotoList', [], None],
+    'flickr.photos.getWithoutGeoData': ['GFLPhotoList', [], None],
     'flickr.photos.licenses.getInfo': [None, [], None],
     'flickr.photos.licenses.setLicense': [None, [], None],
     'flickr.photos.notes.add': [None, [], None],
@@ -118,7 +118,7 @@ METHODS = {
     'flickr.photos.people.deleteCoords': [None, [], None],
     'flickr.photos.people.editCoords': [None, [], None],
     'flickr.photos.people.getList': [None, [], None],
-    'flickr.photos.recentlyUpdated': [None, [], None],
+    'flickr.photos.recentlyUpdated': ['GFLPhotoList', [], None],
     'flickr.photos.removeTag': [None, [], None],
     'flickr.photos.search': ['GFLPhotoList', [], None],
     'flickr.photos.setContentType': [None, [], None],
@@ -199,10 +199,6 @@ METHODS = {
     'flickr.urls.lookupUser': [None, [], None],
     }
 
-def get_text(nodelist):
-    """Helper function to pull text out of XML nodes."""
-    retval = ''.join([node.data for node in nodelist if node.nodeType == node.TEXT_NODE]) 
-    return retval
 
 
 def _perm_ok(perms, req_perms):
@@ -241,14 +237,18 @@ class GaeMetaDispatcher(object):
             raise GaeFlickrLibException("unknown method %s" % self.method)
         for req_param in methmeta[1]:
             if not req_param in kargs:
-                raise GaeFlickrLibException, "%s method requires \
-                argument %s" % [fullmethod, req_param]
+                raise GaeFlickrLibException, \
+                      "%s method requires argument %s" % (self.method, req_param)
         try:
             rsp = self.flickrObj.execute(self.method,
                                          args = kargs)
         except GaeFlickrLibException, message:
             if methmeta[2] is not None:
-                methmeta[2](message)
+                retobj = methmeta[2](str(message))
+                if retobj is not None:
+                    return retobj
+                else:
+                    raise
             else:
                 raise
         retobj = getattr(models, methmeta[0], None)

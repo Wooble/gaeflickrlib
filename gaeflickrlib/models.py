@@ -48,7 +48,7 @@ class GFLPhoto:
 
     def photopage_url(self):
         """Return URL for photo's page on Flickr"""
-        purl = 'www.flickr.com/photo.gne?id=' + self.data['id']
+        purl = 'http://www.flickr.com/photo.gne?id=' + self.data['id']
         return purl
 
     def url_s(self):
@@ -62,8 +62,9 @@ class GFLPhoto:
         """String representation of a photo is HTML to display
         it small with a link back to photo page (as required by
         Flickr Terms of Use)."""
-        retval = """<a href='%s'><img src='%s'></a>""" % (self.photopage_url,
+        retval = """<a href='%s'><img src='%s'></a>""" % (self.photopage_url(),
                                                           self.url(size = 'm'))
+        return retval
 
 class GFLPhotoList:
     """A list of Flickr photos, as returned by many API methods"""

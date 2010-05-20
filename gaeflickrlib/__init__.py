@@ -361,7 +361,7 @@ class GaeFlickrLib(object):
         pieces2 = []
         for key, val in pieces.items():
             pieces2.append("%s=%s" % (key, val))
-        url = '&'.join(pieces2)
+        url += '&'.join(pieces2)
         return url
 
 
@@ -374,7 +374,7 @@ def _authed(fun, self, perms, optional, *args, **kw):
     if 'gaeflsid' in self.request.cookies:
         authsess = memcache.get(self.request.cookies['gaeflsid'])
         if authsess is None:
-            authsessobj = FlickrAuthSession.get_by_key_name(
+            authsessobj = models.FlickrAuthSession.get_by_key_name(
                 self.request.cookies['gaeflsid'])
             if authsessobj is not None:
                 authsess = pickle.loads(str(authsessobj.tokenobj))
@@ -439,7 +439,7 @@ class FlickrAuthCallbackHandler(webapp.RequestHandler):
         self.response.headers["Set-Cookie"] = "gaeflsid=%s" % sessid
         memcache.set(sessid, tokenobj, namespace='gaeflsid')
         pto = pickle.dumps(tokenobj)
-        fas = FlickrAuthSession(tokenobj = pto, key_name = sessid)
+        fas = models.FlickrAuthSession(tokenobj = pto, key_name = sessid)
         fas.put()
 
         if 'gaeflretpage' in self.request.cookies:

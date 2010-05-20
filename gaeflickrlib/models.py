@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from gaeflickrlib.helpers import get_text
 import logging
 
 class GFLToken:
@@ -45,13 +46,24 @@ class GFLPhoto:
         purl += '.jpg'
         return purl
 
+    def photopage_url(self):
+        """Return URL for photo's page on Flickr"""
+        purl = 'www.flickr.com/photo.gne?id=' + self.data['id']
+        return purl
+
     def url_s(self):
         """Convenience method to return URL for small size photo"""
         return self.url(size = 's')
 
     def __getitem__(self, key):
         return self.data[key]
-    
+
+    def __str__(self):
+        """String representation of a photo is HTML to display
+        it small with a link back to photo page (as required by
+        Flickr Terms of Use)."""
+        retval = """<a href='%s'><img src='%s'></a>""" % (self.photopage_url,
+                                                          self.url(size = 'm'))
 
 class GFLPhotoList:
     """A list of Flickr photos, as returned by many API methods"""

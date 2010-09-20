@@ -88,7 +88,8 @@ METHODS = {
     'flickr.photos.geo.correctLocation': [None, [], None],
     'flickr.photos.geo.getLocation': [None, [], None],
     'flickr.photos.geo.getPerms': [None, [], None],
-    'flickr.photos.geo.photosForLocation': ['GFLPhotoList', ['lat', 'lon'], None],
+    'flickr.photos.geo.photosForLocation': ['GFLPhotoList',
+                                            ['lat', 'lon'], None],
     'flickr.photos.geo.removeLocation': [None, [], None],
     'flickr.photos.geo.setContext': [None, [], None],
     'flickr.photos.geo.setLocation': [None, [], None],
@@ -222,7 +223,8 @@ class GaeFlickrLibException(Exception):
 class GaeMetaDispatcher(object):
     def __init__(self, method = None, flickrObj = None):
         if flickrObj is None:
-            raise GaeFlickrLibException("meta dispatcher needs GaeFlickrLib object")
+            raise GaeFlickrLibException("meta dispatcher needs \
+            GaeFlickrLib object")
         if method is None:
             method = "flickr"
         self.method = method
@@ -238,7 +240,8 @@ class GaeMetaDispatcher(object):
         for req_param in methmeta[1]:
             if not req_param in kargs:
                 raise GaeFlickrLibException, \
-                      "%s method requires argument %s" % (self.method, req_param)
+                      "%s method requires argument %s" % (self.method,
+                                                          req_param)
         try:
             rsp = self.flickrObj.execute(self.method,
                                          args = kargs)
@@ -386,7 +389,8 @@ def _authed(fun, self, perms, optional, *args, **kw):
         logging.debug("no auth session; redirecting")
         self.flickr = GaeFlickrLib(api_key=API_KEY, 
                                    api_secret=API_SECRET)
-        self.response.headers["Set-Cookie"] = "gaeflretpage=%s" % self.request.url
+        self.response.headers["Set-Cookie"] = ("gaeflretpage=%s" %
+                                               self.request.url)
         return self.redirect(self.flickr.login_url(perms = perms))
     else:
         self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)

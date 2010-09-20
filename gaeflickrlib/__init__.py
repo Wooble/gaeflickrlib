@@ -13,6 +13,7 @@ import gaeflickrlib.exceptionhandlers as eh
 import logging
 import urllib
 import pickle
+import warnings
 
 try:
     import gaeflconfig
@@ -236,7 +237,8 @@ class GaeMetaDispatcher(object):
         try:
             methmeta = METHODS[self.method]
         except AttributeError:
-            raise GaeFlickrLibException("unknown method %s" % self.method)
+            warn("unknown method %s" % self.method)
+            methmeta = [None, [], None]
         for req_param in methmeta[1]:
             if not req_param in kargs:
                 raise GaeFlickrLibException, \

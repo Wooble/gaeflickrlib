@@ -50,7 +50,6 @@ class GFLPhoto:
         """Return URL for photo's page on Flickr"""
         purl = 'http://www.flickr.com/photo.gne?id=' + self.data['id']
         return purl
-
     def url_s(self):
         """Convenience method to return URL for small size photo"""
         return self.url(size = 's')

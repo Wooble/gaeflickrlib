@@ -314,7 +314,7 @@ class GaeFlickrLib(object):
             url += urllib.quote(str(key)) + '=' + urllib.quote(str(value)) + '&'
         url = url.rstrip('&')
         logging.debug(url)
-        resp = urlfetch.fetch(url)
+        resp = urlfetch.fetch(url, deadline = 10)
         #logging.debug(resp.content.decode("UTF-8"))
         dom = xml.dom.minidom.parseString(resp.content)
         rsp = dom.getElementsByTagName('rsp')[0]

@@ -384,7 +384,7 @@ def _authed(fun, self, perms, optional, *args, **kw):
                 authsess = pickle.loads(str(authsessobj.tokenobj))
         if authsess is not None and _perm_ok(authsess['perms'], perms):
             self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET,
-                                             token = str(authsess))
+                                       token = authsess)
             return fun(self, *args, **kw)
     if not optional:
         logging.debug("no auth session; redirecting")
@@ -440,6 +440,8 @@ class FlickrAuthCallbackHandler(webapp.RequestHandler):
         flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET)
         frob = self.request.get('frob')
         tokenobj = flickr.auth_getToken(frob = frob)
+        logging.debug("FlickrAuthCallbackHandler tokenobj = %s",
+                      repr(tokenobj))
         sessid = str(uuid1())
         self.response.headers["Set-Cookie"] = "gaeflsid=%s" % sessid
         memcache.set(sessid, tokenobj, namespace='gaeflsid')

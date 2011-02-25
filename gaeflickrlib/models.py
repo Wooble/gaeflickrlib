@@ -2,11 +2,11 @@ from google.appengine.ext import db
 from gaeflickrlib.helpers import get_text
 import logging
 
-class GFLToken:
+class GFLToken(object):
     """A Flickr auth token"""
+    data = {}
 
     def __init__(self, rsp):
-        self.data = {}
         self.data['token'] = str(get_text(rsp.getElementsByTagName('token')[0]
                                      .childNodes))
         self.data['perms'] = str(get_text(rsp.getElementsByTagName('perms')[0]
@@ -25,7 +25,22 @@ class GFLToken:
     def __getitem__(self, key):
         return self.data[key]
 
-class GFLPhoto:
+    def __getstate__(self):
+        state ={'token': self.data['token'],
+                 'perms': self.data['perms'],
+                 'nsid': self.data['nsid'],
+                 'username': self.data['username'],
+                 'fullname': self.data['fullname']
+                 }
+
+    def __setstate__(self, state):
+        self.data['token'] = state['token']
+        self.data['perms'] = state['perms']
+        self.data['nsid'] = state['nsid']
+        self.data['username'] = state['username']
+        self.data['fullname'] = state['fullname']
+
+class GFLPhoto(object):
     """Information about a single Flickr photo."""
 
     def __init__(self, photo):
@@ -65,7 +80,7 @@ class GFLPhoto:
                                                           self.url(size = 'm'))
         return retval
 
-class GFLPhotoList:
+class GFLPhotoList(object):
     """A list of Flickr photos, as returned by many API methods"""
     def __init__(self, rsp):
         self.photos = []

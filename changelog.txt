@@ -21,7 +21,9 @@ version 0.3, 3/1/2010:
           starts a session for above-mentioned decorated request
           handlers.
 
-version 0.4, 
+version 0.5, 2/25/2011 
 
         - implemented flickr.auth.getFullToken
+        - fixed style problems
+        - fixed issue with pickling tokens
 

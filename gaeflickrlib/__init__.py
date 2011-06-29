@@ -9,8 +9,8 @@ from google.appengine.api import memcache
 from gaeflickrlib import models
 from gaeflickrlib.helpers import get_text
 import gaeflickrlib.exceptionhandlers as eh
-
 import logging
+
 import urllib
 import pickle
 
@@ -385,6 +385,7 @@ def _authed(fun, self, perms, optional, *args, **kw):
         if authsess is not None and _perm_ok(authsess['perms'], perms):
             self.flickr = GaeFlickrLib(api_key=API_KEY, api_secret=API_SECRET,
                                        token = authsess)
+            logging.debug(authsess)
             return fun(self, *args, **kw)
     if not optional:
         logging.debug("no auth session; redirecting")

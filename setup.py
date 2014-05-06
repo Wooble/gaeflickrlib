@@ -19,5 +19,4 @@ setup(name='gaeflickrlib',
       description='Flickr API kit for Google App Engine',
       keywords=['flickr', 'google-app-engine', 'gae', 'appengine'],
       install_requires=['oauth2'],
-      test_suite='gaeflickrlib.test',
       )

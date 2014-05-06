@@ -11,4 +11,4 @@ before_script:
 
 script:
   - export PYTHONPATH=$PYTHONPATH:google_appengine
-  - python setup.py test
+  - python runtests.py

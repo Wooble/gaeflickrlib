@@ -1,0 +1,1 @@
+"""gaeflickrlib test suite"""
